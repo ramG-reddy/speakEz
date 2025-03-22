@@ -6,9 +6,10 @@ import {
   Platform,
   FlatList,
 } from "react-native";
-import { PRESETS } from "@/constants/Data";
+import { PRESETS } from "@/lib/constants/Data";
 import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import { handleInput } from "@/lib/utils/handleInput";
 
 export default function Presets() {
   const [selectedPreset, setSelectedPreset] = useState(0);
@@ -17,37 +18,23 @@ export default function Presets() {
 
   // Handle tap event
   const handleTap = () => {
-    setSelectedPreset((prevSelectedPreset) => {
-      let nextPreset = prevSelectedPreset;
-      switch (currHighlithedNav) {
-        case "up":
-          nextPreset =
-            (prevSelectedPreset - numCols + PRESETS.length) % PRESETS.length;
-          break;
-        case "down":
-          nextPreset = (prevSelectedPreset + numCols) % PRESETS.length;
-          break;
-        case "left":
-          nextPreset =
-            (prevSelectedPreset - 1 + PRESETS.length) % PRESETS.length;
-          break;
-        case "right":
-          nextPreset = (prevSelectedPreset + 1) % PRESETS.length;
-          break;
-        case "action":
-          // Perform action on the selected preset
-          const phrase = `${PRESETS[prevSelectedPreset].text}`;
-          console.log(phrase);
-          if (Platform.OS === "web") {
-            const utterance = new SpeechSynthesisUtterance(phrase);
-            window.speechSynthesis.speak(utterance);
-          } else {
-            // Tts.speak(phrase);
-          }
-          break;
+    let nextPreset = handleInput({
+      currHighlithedNav,
+      array: PRESETS,
+      index: selectedPreset,
+      numCols: 3,
+      onAction: () => {
+        const phrase = `${PRESETS[selectedPreset].text}`;
+        console.log(phrase);
+        if (Platform.OS === "web") {
+          const utterance = new SpeechSynthesisUtterance(phrase);
+          window.speechSynthesis.speak(utterance);
+        } else {
+          // Tts.speak(phrase);
+        }
       }
-      return nextPreset;
     });
+    setSelectedPreset(nextPreset);
   };
 
   const PresetItem = ({
@@ -68,7 +55,7 @@ export default function Presets() {
   );
 
   return (
-    <Pressable onPress={handleTap} className="flex-1 p-4">
+    <Pressable onPress={() => handleTap()} className="flex-1 p-4">
       <Text className="text-4xl font-semibold px-2 mb-4">Presets</Text>
       <FlatList
         data={PRESETS}
