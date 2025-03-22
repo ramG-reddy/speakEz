@@ -11,7 +11,9 @@ export default function RootLayout() {
           contentStyle: { flex: 1 },
         }}
       />
-      <NavPatch />
+      <View className="flex-center w-[25%] bg-slate-200">
+        <NavPatch />
+      </View>
     </View>
   );
 }
