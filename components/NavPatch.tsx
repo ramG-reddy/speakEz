@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { useEffect, useState } from "react";
-import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/constants/Config";
+import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/lib/constants/Config";
 import { useAppContext } from "@/context/AppContext";
 
 export default function NavigationControl() {
