@@ -1,30 +1,49 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  Platform,
-  FlatList,
-} from "react-native";
-import { PRESETS } from "@/lib/constants/Data";
-import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import { PRESETS } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { router } from "expo-router";
 
 export default function Presets() {
   const [selectedPreset, setSelectedPreset] = useState(0);
   const { currHighlithedNav } = useAppContext();
   const numCols = 3;
+  const [presetArray, setPresetArray] = useState(PRESETS);
+
+  useEffect(() => {
+    setPresetArray((prev) => {
+      const newPresets = [
+        ...prev,
+        {
+          id: "wordBuilder",
+          text: "WORD BUILDER →",
+        },
+      ];
+      return newPresets;
+    });
+  }, []);
 
   // Handle tap event
   const handleTap = () => {
     let nextPreset = handleInput({
       currHighlithedNav,
-      array: PRESETS,
+      array: presetArray,
       index: selectedPreset,
       numCols: 3,
       onAction: () => {
-        const phrase = `${PRESETS[selectedPreset].text}`;
+        if (presetArray[selectedPreset].id === "wordBuilder") {
+          router.push("./word-builder");
+          return;
+        }
+        const phrase = `${presetArray[selectedPreset].text}`;
         console.log(phrase);
         if (Platform.OS === "web") {
           const utterance = new SpeechSynthesisUtterance(phrase);
@@ -32,7 +51,7 @@ export default function Presets() {
         } else {
           // Tts.speak(phrase);
         }
-      }
+      },
     });
     setSelectedPreset(nextPreset);
   };
@@ -41,13 +60,14 @@ export default function Presets() {
     item,
     index,
   }: {
-    item: (typeof PRESETS)[0];
+    item: (typeof presetArray)[0];
     index: number;
   }) => (
     <View
       style={[
         styles.presetCard,
         selectedPreset === index && styles.selectedPreset,
+        item.id === "wordBuilder" && { backgroundColor: "#bedead" },
       ]}
     >
       <Text style={styles.presetText}>{item.text}</Text>
@@ -58,7 +78,7 @@ export default function Presets() {
     <Pressable onPress={() => handleTap()} className="flex-1 p-4">
       <Text className="text-4xl font-semibold px-2 mb-4">Presets</Text>
       <FlatList
-        data={PRESETS}
+        data={presetArray}
         renderItem={PresetItem}
         numColumns={numCols}
         keyExtractor={(item) => item.id}
