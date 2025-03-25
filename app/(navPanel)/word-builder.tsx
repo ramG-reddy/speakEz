@@ -1,17 +1,19 @@
 import { useAppContext } from "@/context/AppContext";
+import { useBLE } from "@/context/BLEContext";
 import { MOCK_DATA } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
-import { useState } from "react";
+import { speakText } from "@/lib/utils/speakText";
+import { useBLEInput } from "@/hooks/useBLEInput";
+import { useEffect, useState } from "react";
 import {
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { router } from "expo-router";
-// import Tts from "react-native-tts"; // Import TTS for native platforms
 
 export default function WordBuilder() {
   const [selectedWord, setSelectedWord] = useState(0);
@@ -21,35 +23,33 @@ export default function WordBuilder() {
   const [wordArray, setWordArray] = useState(MOCK_DATA);
   const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
   const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
+  const { isConnected, startScan } = useBLE();
 
-  // Add a helper function for speaking text
-  const speakText = (sentence: string) => {
-    if (Platform.OS === "web") {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+  // Use the BLE input hook
+  const { currentIndex } = useBLEInput({
+    array: wordArray,
+    index: selectedWord,
+    numCols,
+    onAction: () => {
+      if (!isButtonHighlighted) {
+        const word = wordArray[selectedWord].data;
+        addWordToSentence(word);
+      } else {
+        if (highlightedButton === 0) {
+          setSentence(""); // Clear action
+        } else {
+          console.log(sentence);
+          speakText(sentence);
+        }
+      }
+    },
+    isEnabled: isConnected, // Only enable when connected
+  });
 
-      // Add a slight pause at the beginning to improve initial pronunciation
-      const processedText = sentence.trim();
-      const utterance = new SpeechSynthesisUtterance(processedText);
-
-      // Configure speech parameters for better pronunciation
-      utterance.rate = 0.9; // Slightly slower rate for clarity
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      // Set language if needed
-      // utterance.lang = 'en-US';
-
-      // Add a small delay before speaking to ensure engine is ready
-      setTimeout(() => {
-        window.speechSynthesis.speak(utterance);
-      }, 500);
-    } else {
-      // Native platform implementation
-      // Tts.setDefaultRate(0.9);
-      // Tts.speak(sentence.trim());
-    }
-  };
+  // Update selected word when BLE input changes
+  useEffect(() => {
+    setSelectedWord(currentIndex);
+  }, [currentIndex]);
 
   // Use the helper function when adding words
   const addWordToSentence = (word: string) => {
@@ -61,7 +61,7 @@ export default function WordBuilder() {
     });
   };
 
-  // Handle tap event
+  // Handle tap event (manual input)
   const handleTap = () => {
     // Handle button navigation when buttons are highlighted
     if (isButtonHighlighted) {
@@ -84,8 +84,6 @@ export default function WordBuilder() {
           // Speak action with enhanced pronunciation
           console.log(sentence);
           speakText(sentence);
-          // setSentence(""); // Clear sentence after speaking
-          // router.push("./presets");
         }
         return;
       }
@@ -105,7 +103,7 @@ export default function WordBuilder() {
       index: selectedWord,
       numCols,
       onAction: () => {
-        const word = `${wordArray[selectedWord].data}`;
+        const word = wordArray[selectedWord].data;
         addWordToSentence(word);
       },
     });
@@ -132,6 +130,19 @@ export default function WordBuilder() {
   return (
     <Pressable onPress={() => handleTap()} className="flex-1 p-4">
       <Text className="text-4xl font-semibold px-2 mb-4">Word Builder</Text>
+
+      {/* BLE Connection Button */}
+      {!isConnected && (
+        <TouchableOpacity
+          onPress={startScan}
+          style={styles.bleButton}
+          className="mb-4"
+        >
+          <Text style={styles.bleButtonText}>Connect BLE Device</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Rest of the component remains the same */}
       <View style={styles.textArea} className="px-4 py-2 m-2">
         <View style={styles.inputContainer}>
           <Text style={styles.displayText}>{sentence}</Text>
@@ -151,8 +162,6 @@ export default function WordBuilder() {
           </Pressable>
           <Pressable
             onPress={() => {
-              setSentence("Dot ball Dot ball");
-              console.log(sentence);
               speakText(sentence);
             }}
             style={[
@@ -178,6 +187,16 @@ export default function WordBuilder() {
 }
 
 const styles = StyleSheet.create({
+  bleButton: {
+    backgroundColor: "#4287f5",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  bleButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
   textArea: {
     borderColor: "#333",
     borderWidth: 1,
@@ -218,7 +237,7 @@ const styles = StyleSheet.create({
   },
   selectedWord: {
     borderColor: "#00f",
-    borderWidth: 2,
+    borderWidth: 4,
   },
   wordText: {
     color: "#000",
