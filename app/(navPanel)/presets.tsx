@@ -1,4 +1,4 @@
-import { useAppContext } from "@/context/AppContext";
+import { useAppContext } from "@/lib/context/AppContext";
 import { PRESETS } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
 import { useEffect, useState } from "react";

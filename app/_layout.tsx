@@ -1,8 +1,8 @@
 import NavBar from "@/components/NavBar";
 import { Stack } from "expo-router";
 import { View } from "react-native";
-import { AppContextProvider } from "@/context/AppContext";
-import { BLEProvider } from "@/context/BLEContext";
+import { AppContextProvider } from "@/lib/context/AppContext";
+import { BLEProvider } from "@/lib/context/BLEContext";
 
 import "./global.css";
 

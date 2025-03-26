@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useBLE } from "@/context/BLEContext";
+import { useBLE } from "@/lib/context/BLEContext";
 import { handleInput } from "@/lib/utils/handleInput";
 import { Platform } from "react-native";
 
