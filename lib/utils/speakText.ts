@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-// import Tts from "react-native-tts"; // Import TTS for native platforms
+import Tts from "react-native-tts"; // Import TTS for native platforms
 
 export const speakText = (sentence: string) => {
   if (Platform.OS === "web") {
@@ -24,7 +24,8 @@ export const speakText = (sentence: string) => {
     }, 500);
   } else {
     // Native platform implementation
-    // Tts.setDefaultRate(0.9);
-    // Tts.speak(sentence.trim());
+    Tts.setDefaultRate(0.4);
+    Tts.setDefaultPitch(1.0);
+    Tts.speak(sentence.trim());
   }
 };

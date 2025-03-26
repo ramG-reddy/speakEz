@@ -1,120 +1,126 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Alert, Platform } from "react-native";
-import { bleService, NavigationAction } from "@/lib/services/BLEService";
+import { Device } from "react-native-ble-plx";
+import { bleService, NavigationAction } from "../services/BLEService";
+import { Platform } from "react-native";
 
+// Define context type
 type BLEContextType = {
   isConnected: boolean;
+  lastAction: NavigationAction;
   startScan: () => void;
   stopScan: () => void;
+  discoveredDevices: Device[];
+  connectToDevice: (device: Device) => void;
   disconnect: () => void;
-  lastAction: NavigationAction;
+  isScanning: boolean;
 };
 
+// Create context
 const BLEContext = createContext<BLEContextType>({
   isConnected: false,
+  lastAction: "none",
   startScan: () => {},
   stopScan: () => {},
+  discoveredDevices: [],
+  connectToDevice: () => {},
   disconnect: () => {},
-  lastAction: "none",
+  isScanning: false,
 });
 
-export const BLEProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [isInitialized, setIsInitialized] = useState(false);
+// Provider component
+export function BLEProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastAction, setLastAction] = useState<NavigationAction>("none");
+  const [discoveredDevices, setDiscoveredDevices] = useState<Device[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
 
+  // Initialize BLE
   useEffect(() => {
-    const initializeBLE = async () => {
-      if (Platform.OS === "web") {
-        console.warn("BLE is not supported on web platform");
-        return;
-      }
+    // Skip for web
+    if (Platform.OS === "web") return;
 
-      try {
-        const bleEnabled = await bleService.initialize();
+    bleService.initialize();
 
-        if (bleEnabled) {
-          setIsInitialized(true);
-
-          // Add action listener
-          bleService.addListener(handleBLEAction);
-        } else {
-          Alert.alert(
-            "Bluetooth Required",
-            "Please enable Bluetooth to use the touch controls"
-          );
-        }
-      } catch (error) {
-        console.error("BLE initialization error:", error);
-      }
+    // Set up action listener
+    const actionListener = (action: NavigationAction) => {
+      setLastAction(action);
     };
+    bleService.addListener(actionListener);
 
-    initializeBLE();
+    // Set up device listener
+    const deviceListener = (devices: Device[]) => {
+      setDiscoveredDevices(devices);
+    };
+    bleService.addDeviceListener(deviceListener);
 
-    // Cleanup on unmount
+    // Clean up on unmount
     return () => {
-      if (Platform.OS !== "web") {
-        try {
-          bleService.removeListener(handleBLEAction);
-          bleService.destroy();
-        } catch (error) {
-          console.error("BLE cleanup error:", error);
-        }
-      }
+      bleService.removeListener(actionListener);
+      bleService.removeDeviceListener(deviceListener);
+      bleService.destroy();
     };
   }, []);
 
-  // Handle actions received from BLE
-  const handleBLEAction = (action: NavigationAction) => {
-    setLastAction(action);
-    setIsConnected(bleService.isDeviceConnected());
-  };
+  // Update connection status on scan status change
+  useEffect(() => {
+    if (Platform.OS === "web") return;
 
-  // Start scanning for the device
-  const startScan = () => {
-    if (isInitialized && Platform.OS !== "web") {
-      try {
-        bleService.startScan();
-      } catch (error) {
-        console.error("Error starting scan:", error);
-      }
-    }
+    setIsConnected(bleService.isDeviceConnected());
+    setIsScanning(bleService.isScanningDevices());
+
+    // We could set up a timer to check connection status periodically
+    const interval = setInterval(() => {
+      setIsConnected(bleService.isDeviceConnected());
+      setIsScanning(bleService.isScanningDevices());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [discoveredDevices]);
+
+  // Start scanning for devices
+  const startScan = async () => {
+    if (Platform.OS === "web") return;
+    setIsScanning(true);
+    await bleService.startScan();
   };
 
   // Stop scanning
   const stopScan = () => {
-    if (isInitialized && Platform.OS !== "web") {
-      try {
-        bleService.stopScan();
-      } catch (error) {
-        console.error("Error stopping scan:", error);
-      }
-    }
+    if (Platform.OS === "web") return;
+    bleService.stopScan();
+    setIsScanning(false);
+  };
+
+  // Connect to a device
+  const connectToDevice = async (device: Device) => {
+    if (Platform.OS === "web") return;
+    await bleService.connectToDevice(device);
+    setIsConnected(bleService.isDeviceConnected());
   };
 
   // Disconnect from device
-  const disconnect = () => {
-    if (isInitialized && Platform.OS !== "web") {
-      try {
-        bleService.disconnect();
-        setIsConnected(false);
-      } catch (error) {
-        console.error("Error disconnecting:", error);
-      }
-    }
+  const disconnect = async () => {
+    if (Platform.OS === "web") return;
+    await bleService.disconnect();
+    setIsConnected(false);
   };
 
-  const value = {
+  // Create context value
+  const contextValue: BLEContextType = {
     isConnected,
+    lastAction,
     startScan,
     stopScan,
+    discoveredDevices,
+    connectToDevice,
     disconnect,
-    lastAction,
+    isScanning,
   };
 
-  return <BLEContext.Provider value={value}>{children}</BLEContext.Provider>;
-};
+  return (
+    <BLEContext.Provider value={contextValue}>{children}</BLEContext.Provider>
+  );
+}
 
+// Hook for using the BLE context
 export const useBLE = () => useContext(BLEContext);
