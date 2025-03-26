@@ -6,7 +6,7 @@ import {
   Platform,
 } from "react-native";
 import { Link } from "expo-router";
-import { useBLE } from "@/context/BLEContext";
+import { useBLE } from "@/lib/context/BLEContext";
 
 export default function NavBar() {
   const { isConnected, startScan } = useBLE();

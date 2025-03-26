@@ -1,9 +1,9 @@
-import { useAppContext } from "@/context/AppContext";
-import { useBLE } from "@/context/BLEContext";
+import { useAppContext } from "@/lib/context/AppContext";
+import { useBLE } from "@/lib/context/BLEContext";
 import { MOCK_DATA } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
 import { speakText } from "@/lib/utils/speakText";
-import { useBLEInput } from "@/hooks/useBLEInput";
+import { useBLEInput } from "@/lib/hooks/useBLEInput";
 import { useEffect, useState } from "react";
 import {
   FlatList,
