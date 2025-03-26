@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import { useEffect, useState } from "react";
 import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/lib/constants/Config";
 import { useAppContext } from "@/context/AppContext";
@@ -6,6 +6,8 @@ import { useAppContext } from "@/context/AppContext";
 export default function NavigationControl() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const dirs = ORDER_OF_HIGHLIGHTS;
+  const { width } = Dimensions.get("window");
+  const isSmallDevice = width < 768;
 
   const { currHighlithedNav, setCurrHighlightedNav } = useAppContext();
 
@@ -21,13 +23,18 @@ export default function NavigationControl() {
     return () => clearInterval(interval);
   }, []);
 
-  const buttonClass =
-    "w-16 h-16 max-md:w-12 max-md:h-12 flex items-center justify-center border border-gray-300 rounded-md";
+  // Adjust sizes based on screen width
+  const buttonSize = isSmallDevice
+    ? "w-6 h-6"
+    : "w-12 h-12 max-md:w-10 max-md:h-10";
+  const textSize = isSmallDevice ? "text-md" : "text-2xl";
+
+  const buttonClass = `${buttonSize} flex items-center justify-center border border-gray-300 rounded-md`;
   const highlightedClass = "bg-green-200 border-black";
-  const buttonTextClass = "text-2xl text-black";
+  const buttonTextClass = `${textSize} text-black`;
 
   return (
-    <View className="w-auto max-w-xs md:max-w-sm lg:max-w-md h-auto p-4 border border-gray-300 rounded-lg bg-gray-100 flex flex-col items-center justify-center">
+    <View className="w-auto p-2 md:p-4 border border-gray-300 rounded-lg bg-gray-100 flex flex-col items-center justify-center">
       <View className="flex flex-row gap-1 m-1">
         <View
           className={`${buttonClass} ${
