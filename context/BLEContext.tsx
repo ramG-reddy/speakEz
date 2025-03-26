@@ -32,18 +32,22 @@ export const BLEProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      const bleEnabled = await bleService.initialize();
+      try {
+        const bleEnabled = await bleService.initialize();
 
-      if (bleEnabled) {
-        setIsInitialized(true);
+        if (bleEnabled) {
+          setIsInitialized(true);
 
-        // Add action listener
-        bleService.addListener(handleBLEAction);
-      } else {
-        Alert.alert(
-          "Bluetooth Required",
-          "Please enable Bluetooth to use the touch controls"
-        );
+          // Add action listener
+          bleService.addListener(handleBLEAction);
+        } else {
+          Alert.alert(
+            "Bluetooth Required",
+            "Please enable Bluetooth to use the touch controls"
+          );
+        }
+      } catch (error) {
+        console.error("BLE initialization error:", error);
       }
     };
 
@@ -52,8 +56,12 @@ export const BLEProvider: React.FC<{ children: React.ReactNode }> = ({
     // Cleanup on unmount
     return () => {
       if (Platform.OS !== "web") {
-        bleService.removeListener(handleBLEAction);
-        bleService.destroy();
+        try {
+          bleService.removeListener(handleBLEAction);
+          bleService.destroy();
+        } catch (error) {
+          console.error("BLE cleanup error:", error);
+        }
       }
     };
   }, []);
@@ -67,22 +75,34 @@ export const BLEProvider: React.FC<{ children: React.ReactNode }> = ({
   // Start scanning for the device
   const startScan = () => {
     if (isInitialized && Platform.OS !== "web") {
-      bleService.startScan();
+      try {
+        bleService.startScan();
+      } catch (error) {
+        console.error("Error starting scan:", error);
+      }
     }
   };
 
   // Stop scanning
   const stopScan = () => {
     if (isInitialized && Platform.OS !== "web") {
-      bleService.stopScan();
+      try {
+        bleService.stopScan();
+      } catch (error) {
+        console.error("Error stopping scan:", error);
+      }
     }
   };
 
   // Disconnect from device
   const disconnect = () => {
     if (isInitialized && Platform.OS !== "web") {
-      bleService.disconnect();
-      setIsConnected(false);
+      try {
+        bleService.disconnect();
+        setIsConnected(false);
+      } catch (error) {
+        console.error("Error disconnecting:", error);
+      }
     }
   };
 

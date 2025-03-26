@@ -23,7 +23,7 @@ export default function WordBuilder() {
   const [wordArray, setWordArray] = useState(MOCK_DATA);
   const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
   const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
-  const { isConnected, startScan } = useBLE();
+  const { isConnected } = useBLE();
 
   // Use the BLE input hook
   const { currentIndex } = useBLEInput({
@@ -131,18 +131,8 @@ export default function WordBuilder() {
     <Pressable onPress={() => handleTap()} className="flex-1 p-4">
       <Text className="text-4xl font-semibold px-2 mb-4">Word Builder</Text>
 
-      {/* BLE Connection Button */}
-      {!isConnected && (
-        <TouchableOpacity
-          onPress={startScan}
-          style={styles.bleButton}
-          className="mb-4"
-        >
-          <Text style={styles.bleButtonText}>Connect BLE Device</Text>
-        </TouchableOpacity>
-      )}
+      {/* BLE Connection Button has been removed and moved to NavBar */}
 
-      {/* Rest of the component remains the same */}
       <View style={styles.textArea} className="px-4 py-2 m-2">
         <View style={styles.inputContainer}>
           <Text style={styles.displayText}>{sentence}</Text>
@@ -187,16 +177,7 @@ export default function WordBuilder() {
 }
 
 const styles = StyleSheet.create({
-  bleButton: {
-    backgroundColor: "#4287f5",
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  bleButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
+  // ...existing code...
   textArea: {
     borderColor: "#333",
     borderWidth: 1,

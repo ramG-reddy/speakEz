@@ -21,25 +21,35 @@ export type NavigationAction =
   | "none";
 
 export class BLEService {
-  private manager: BleManager;
+  private manager: BleManager | null = null;
   private device: Device | null = null;
   private isScanning = false;
   private isConnected = false;
   private listeners: Array<(action: NavigationAction) => void> = [];
 
   constructor() {
-    this.manager = new BleManager();
+    // Only create BleManager for native platforms
+    if (Platform.OS !== "web") {
+      try {
+        this.manager = new BleManager();
+      } catch (error) {
+        console.warn("Failed to initialize BleManager:", error);
+        this.manager = null;
+      }
+    } else {
+      console.warn("BLE functionality is not supported on web");
+    }
   }
 
   // Initialize BLE functionality
   async initialize(): Promise<boolean> {
-    if (Platform.OS === "web") {
-      console.warn("BLE is not supported on web platform");
+    if (Platform.OS === "web" || !this.manager) {
+      console.warn("BLE is not supported on this platform");
       return false;
     }
 
     return new Promise((resolve) => {
-      this.manager.onStateChange((state) => {
+      this.manager!.onStateChange((state) => {
         if (state === State.PoweredOn) {
           resolve(true);
         } else if (state === State.PoweredOff) {
@@ -51,7 +61,7 @@ export class BLEService {
 
   // Start scanning for ESP32 device
   async startScan(): Promise<void> {
-    if (this.isScanning || Platform.OS === "web") return;
+    if (this.isScanning || Platform.OS === "web" || !this.manager) return;
 
     this.isScanning = true;
 
@@ -76,7 +86,7 @@ export class BLEService {
 
   // Stop scanning for devices
   stopScan(): void {
-    if (!this.isScanning || Platform.OS === "web") return;
+    if (!this.isScanning || Platform.OS === "web" || !this.manager) return;
 
     this.manager.stopDeviceScan();
     this.isScanning = false;
@@ -84,7 +94,7 @@ export class BLEService {
 
   // Connect to the ESP32 device
   private async connectToDevice(device: Device): Promise<void> {
-    if (this.isConnected || Platform.OS === "web") return;
+    if (this.isConnected || Platform.OS === "web" || !this.manager) return;
 
     try {
       this.stopScan();
@@ -111,6 +121,8 @@ export class BLEService {
 
   // Setup notifications for sensor data
   private async setupNotifications(device: Device): Promise<void> {
+    if (Platform.OS === "web" || !this.manager) return;
+
     try {
       // Monitor the characteristic for notifications
       device.monitorCharacteristicForService(
@@ -146,15 +158,10 @@ export class BLEService {
       console.log("Received BLE data:", decodedValue);
 
       // Parse the binary format from ESP32
-      // Format: "00" = up, "01" = right, "10" = down, "11" = left
-      // If the value indicates a pressed sensor, return the corresponding action
-
       if (decodedValue === "00") return "up";
       if (decodedValue === "01") return "right";
       if (decodedValue === "10") return "down";
       if (decodedValue === "11") return "left";
-
-      // For multiple pressed sensors or other scenarios, we could extend this logic
 
       return "action"; // Default to action if none of the above patterns match
     } catch (error) {
@@ -165,7 +172,13 @@ export class BLEService {
 
   // Disconnect from the device
   async disconnect(): Promise<void> {
-    if (!this.isConnected || !this.device || Platform.OS === "web") return;
+    if (
+      !this.isConnected ||
+      !this.device ||
+      Platform.OS === "web" ||
+      !this.manager
+    )
+      return;
 
     try {
       await this.device.cancelConnection();
@@ -199,7 +212,9 @@ export class BLEService {
   // Clean up BLE manager
   destroy(): void {
     this.disconnect();
-    this.manager.destroy();
+    if (this.manager && Platform.OS !== "web") {
+      this.manager.destroy();
+    }
   }
 }
 
