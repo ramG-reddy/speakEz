@@ -5,11 +5,11 @@ import {
   State,
 } from "react-native-ble-plx";
 import { Platform } from "react-native";
-
-// ESP32 BLE identifiers
-const ESP32_NAME = "ESP32-S3-Touch";
-const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+import {
+  CHARACTERISTIC_UUID,
+  ESP32_NAME,
+  SERVICE_UUID,
+} from "../constants/Config";
 
 // Navigation actions
 export type NavigationAction =
@@ -26,6 +26,8 @@ export class BLEService {
   private isScanning = false;
   private isConnected = false;
   private listeners: Array<(action: NavigationAction) => void> = [];
+  private deviceListeners: Array<(devices: Device[]) => void> = [];
+  private discoveredDevices: Device[] = [];
 
   constructor() {
     // Only create BleManager for native platforms
@@ -59,11 +61,13 @@ export class BLEService {
     });
   }
 
-  // Start scanning for ESP32 device
+  // Start scanning for all BLE devices
   async startScan(): Promise<void> {
     if (this.isScanning || Platform.OS === "web" || !this.manager) return;
 
     this.isScanning = true;
+    this.discoveredDevices = []; // Clear previous results
+    this.notifyDeviceListeners(); // Notify listeners about empty list
 
     try {
       await this.manager.startDeviceScan(null, null, (error, device) => {
@@ -73,9 +77,16 @@ export class BLEService {
           return;
         }
 
-        // Found our device
-        if (device?.name === ESP32_NAME) {
-          this.connectToDevice(device);
+        if (device && device.name) {
+          // Only add devices with names to avoid duplicates and unnamed devices
+          const isDuplicate = this.discoveredDevices.some(
+            (d) => d.id === device.id
+          );
+
+          if (!isDuplicate) {
+            this.discoveredDevices.push(device);
+            this.notifyDeviceListeners();
+          }
         }
       });
     } catch (error) {
@@ -92,8 +103,8 @@ export class BLEService {
     this.isScanning = false;
   }
 
-  // Connect to the ESP32 device
-  private async connectToDevice(device: Device): Promise<void> {
+  // Connect to a selected device
+  async connectToDevice(device: Device): Promise<void> {
     if (this.isConnected || Platform.OS === "web" || !this.manager) return;
 
     try {
@@ -106,13 +117,15 @@ export class BLEService {
       const discoveredDevice =
         await connectedDevice.discoverAllServicesAndCharacteristics();
 
-      // Setup notification listener
-      await this.setupNotifications(discoveredDevice);
+      // Setup notification listener if it's our target device
+      if (device.name === ESP32_NAME) {
+        await this.setupNotifications(discoveredDevice);
+      }
 
       this.device = discoveredDevice;
       this.isConnected = true;
 
-      console.log("Connected to ESP32 device");
+      console.log(`Connected to device: ${device.name || device.id}`);
     } catch (error) {
       console.error("Failed to connect to device:", error);
       this.isConnected = false;
@@ -199,14 +212,45 @@ export class BLEService {
     this.listeners = this.listeners.filter((listener) => listener !== callback);
   }
 
+  // Add device list listener
+  addDeviceListener(callback: (devices: Device[]) => void): void {
+    this.deviceListeners.push(callback);
+    // Immediately notify with current devices
+    callback(this.discoveredDevices);
+  }
+
+  // Remove device list listener
+  removeDeviceListener(callback: (devices: Device[]) => void): void {
+    this.deviceListeners = this.deviceListeners.filter(
+      (listener) => listener !== callback
+    );
+  }
+
   // Notify all listeners
   private notifyListeners(action: NavigationAction): void {
     this.listeners.forEach((listener) => listener(action));
   }
 
+  // Notify device listeners
+  private notifyDeviceListeners(): void {
+    this.deviceListeners.forEach((listener) =>
+      listener([...this.discoveredDevices])
+    );
+  }
+
   // Get connection status
   isDeviceConnected(): boolean {
     return this.isConnected;
+  }
+
+  // Get scanning status
+  isScanningDevices(): boolean {
+    return this.isScanning;
+  }
+
+  // Get discovered devices
+  getDiscoveredDevices(): Device[] {
+    return [...this.discoveredDevices];
   }
 
   // Clean up BLE manager

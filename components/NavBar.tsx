@@ -7,9 +7,17 @@ import {
 } from "react-native";
 import { Link } from "expo-router";
 import { useBLE } from "@/lib/context/BLEContext";
+import { useState } from "react";
+import BLEDeviceSelector from "./BLEDeviceSelector";
 
 export default function NavBar() {
-  const { isConnected, startScan } = useBLE();
+  const { isConnected, startScan, isScanning } = useBLE();
+  const [showDeviceSelector, setShowDeviceSelector] = useState(false);
+
+  const handleOpenDeviceSelector = () => {
+    startScan(); // Start scanning when opening the selector
+    setShowDeviceSelector(true);
+  };
 
   return (
     <View className="h-16 bg-gray-800 flex flex-row justify-between items-center px-4">
@@ -22,8 +30,14 @@ export default function NavBar() {
       <View className="flex flex-row gap-6 items-center">
         {/* BLE Connection Button - Only show when not connected and not on web */}
         {!isConnected && Platform.OS !== "web" && (
-          <TouchableOpacity onPress={startScan} style={styles.bleButton}>
-            <Text style={styles.bleButtonText}>Connect BLE</Text>
+          <TouchableOpacity
+            onPress={handleOpenDeviceSelector}
+            style={[styles.bleButton, isScanning && styles.bleButtonScanning]}
+            disabled={isScanning}
+          >
+            <Text style={styles.bleButtonText}>
+              {isScanning ? "Scanning..." : "Connect BLE"}
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -39,6 +53,12 @@ export default function NavBar() {
           </TouchableOpacity>
         </Link>
       </View>
+
+      {/* Device selector modal */}
+      <BLEDeviceSelector
+        visible={showDeviceSelector}
+        onClose={() => setShowDeviceSelector(false)}
+      />
     </View>
   );
 }
@@ -49,6 +69,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
+  },
+  bleButtonScanning: {
+    backgroundColor: "#808080",
   },
   bleButtonText: {
     color: "white",

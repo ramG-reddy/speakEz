@@ -11,17 +11,19 @@ export default function NavigationControl() {
 
   const { currHighlithedNav, setCurrHighlightedNav } = useAppContext();
 
+  // First effect: Update local state
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
-        const newIndex = (prevIndex + 1) % dirs.length;
-        setCurrHighlightedNav(dirs[newIndex]);
-        return newIndex;
-      });
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % dirs.length);
     }, CHANGE_DELAY_ms);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [dirs.length]);
+
+  // Second effect: Update context state based on local state changes
+  useEffect(() => {
+    setCurrHighlightedNav(dirs[currentIndex]);
+  }, [currentIndex, setCurrHighlightedNav, dirs]);
 
   // Adjust sizes based on screen width
   const buttonSize = isSmallDevice

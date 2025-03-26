@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { speakText } from "@/lib/utils/speakText";
 
 export default function Presets() {
   const [selectedPreset, setSelectedPreset] = useState(0);
@@ -45,12 +46,7 @@ export default function Presets() {
         }
         const phrase = `${presetArray[selectedPreset].text}`;
         console.log(phrase);
-        if (Platform.OS === "web") {
-          const utterance = new SpeechSynthesisUtterance(phrase);
-          window.speechSynthesis.speak(utterance);
-        } else {
-          // Tts.speak(phrase);
-        }
+        speakText(phrase);
       },
     });
     setSelectedPreset(nextPreset);
