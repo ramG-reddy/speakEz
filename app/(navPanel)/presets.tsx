@@ -1,14 +1,15 @@
 import { useAppContext } from "@/lib/context/AppContext";
 import { PRESETS } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
+import { useGridScroll } from "@/lib/hooks/useGridScroll";
 import { useEffect, useState } from "react";
 import {
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  Dimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { speakText } from "@/lib/utils/speakText";
@@ -18,6 +19,15 @@ export default function Presets() {
   const { currHighlithedNav } = useAppContext();
   const numCols = 3;
   const [presetArray, setPresetArray] = useState(PRESETS);
+  const { width } = Dimensions.get("window");
+  const isSmallDevice = width < 768;
+
+  // Use the grid scroll hook
+  const { handleItemLayout, safeScrollToPosition, getListProps } =
+    useGridScroll({
+      numCols,
+      isSmallDevice,
+    });
 
   useEffect(() => {
     setPresetArray((prev) => {
@@ -32,6 +42,11 @@ export default function Presets() {
     });
   }, []);
 
+  // Auto-scroll to the selected preset
+  useEffect(() => {
+    safeScrollToPosition(selectedPreset, presetArray.length);
+  }, [selectedPreset, presetArray.length]);
+
   // Handle tap event
   const handleTap = () => {
     let nextPreset = handleInput({
@@ -40,16 +55,20 @@ export default function Presets() {
       index: selectedPreset,
       numCols: 3,
       onAction: () => {
-        if (presetArray[selectedPreset].id === "wordBuilder") {
+        if (presetArray[selectedPreset]?.id === "wordBuilder") {
           router.push("./word-builder");
           return;
         }
-        const phrase = `${presetArray[selectedPreset].text}`;
+        const phrase = `${presetArray[selectedPreset]?.text || ""}`;
         console.log(phrase);
         speakText(phrase);
       },
     });
-    setSelectedPreset(nextPreset);
+
+    // Ensure we have a valid index
+    if (nextPreset >= 0 && nextPreset < presetArray.length) {
+      setSelectedPreset(nextPreset);
+    }
   };
 
   const PresetItem = ({
@@ -65,20 +84,35 @@ export default function Presets() {
         selectedPreset === index && styles.selectedPreset,
         item.id === "wordBuilder" && { backgroundColor: "#bedead" },
       ]}
+      onLayout={index === 0 ? handleItemLayout : undefined}
     >
-      <Text style={styles.presetText}>{item.text}</Text>
+      <Text
+        style={[styles.presetText, isSmallDevice && styles.smallPresetText]}
+      >
+        {item.text}
+      </Text>
     </View>
   );
 
   return (
-    <Pressable onPress={() => handleTap()} className="flex-1 p-4">
-      <Text className="text-4xl font-semibold px-2 mb-4">Presets</Text>
+    <Pressable onPress={() => handleTap()} className="flex-1 p-2 md:p-4">
+      <Text
+        className={`${
+          isSmallDevice ? "text-2xl" : "text-4xl"
+        } font-semibold px-2 mb-2 md:mb-4`}
+      >
+        Presets
+      </Text>
       <FlatList
+        {...getListProps()}
         data={presetArray}
         renderItem={PresetItem}
         numColumns={numCols}
         keyExtractor={(item) => item.id}
-        // contentContainerStyle={styles.presetGrid}
+        initialNumToRender={presetArray.length}
+        maxToRenderPerBatch={presetArray.length}
+        windowSize={21}
+        extraData={selectedPreset} // Ensure re-render when selection changes
       />
     </Pressable>
   );
@@ -89,8 +123,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
     borderRadius: 8,
-    padding: 16,
-    margin: 8,
+    padding: 12,
+    margin: 4,
     borderWidth: 1,
     borderColor: "#333",
   },
@@ -101,6 +135,10 @@ const styles = StyleSheet.create({
   presetText: {
     color: "#000",
     fontSize: 16,
+    textAlign: "center",
+  },
+  smallPresetText: {
+    fontSize: 14,
   },
   presetGrid: {
     gap: 12,
