@@ -70,24 +70,11 @@ export class BLEService {
     this.notifyDeviceListeners(); // Notify listeners about empty list
 
     try {
-      // Enhanced scan options specifically for ESP-32 devices
-      const scanOptions = {
-        allowDuplicates: false,
-        scanMode: 1, // SCAN_MODE_LOW_LATENCY for Android
-        // On iOS, increasing the scan timeout can help find more devices
-        timeoutInterval: Platform.OS === "ios" ? 10000 : undefined,
-      };
-
-      await this.manager.startDeviceScan(null, scanOptions, (error, device) => {
+      this.manager.startDeviceScan(null, null, (error, device) => {
         if (error) {
           console.error("BLE scan error:", error);
-          this.isScanning = false;
-
-          // Notify device listeners about error by passing empty array
-          this.notifyDeviceListeners();
-
-          // Rethrow error to be caught by caller
-          throw error;
+          this.stopScan(); // Ensure scanning stops on error
+          return;
         }
 
         if (device) {
@@ -105,10 +92,12 @@ export class BLEService {
             );
 
             if (!isDuplicate) {
+              console.log("Discovered device:", device);
               // Prioritize ESP-32 devices
               if (
                 device.name?.includes("ESP") ||
-                device.localName?.includes("ESP")
+                device.localName?.includes("ESP") ||
+                1
               ) {
                 // Add ESP devices to the front of the array
                 this.discoveredDevices.unshift(device);
@@ -122,8 +111,7 @@ export class BLEService {
       });
     } catch (error) {
       console.error("Failed to start BLE scan:", error);
-      this.isScanning = false;
-      throw error; // Rethrow to allow caller to handle
+      this.stopScan(); // Ensure scanning stops on exception
     }
   }
 
@@ -133,6 +121,7 @@ export class BLEService {
 
     this.manager.stopDeviceScan();
     this.isScanning = false;
+    console.log("Scanning stopped");
   }
 
   // Connect to a selected device
@@ -142,33 +131,26 @@ export class BLEService {
     try {
       this.stopScan();
 
-      // Connect to device with options optimized for ESP-32
-      const connectionOptions = {
-        timeout: 10000, // 10 seconds
-        autoConnect: true, // Try to auto-connect if connection is lost
-      };
+      const connectedDevice = await device.connect();
+      await connectedDevice.discoverAllServicesAndCharacteristics();
 
-      // Connect to device
-      const connectedDevice = await device.connect(connectionOptions);
+      const services = await connectedDevice.services();
+      console.log("Discovered services:", services);
 
-      // Add a short delay to ensure proper connection
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const service = services.find((s) => s.uuid === SERVICE_UUID);
+      if (!service) {
+        throw new Error(`Service with UUID ${SERVICE_UUID} not found`);
+      }
 
-      // Discover services and characteristics
-      const discoveredDevice =
-        await connectedDevice.discoverAllServicesAndCharacteristics();
-
-      // Setup notification listener for our service/characteristic
-      await this.setupNotifications(discoveredDevice);
-
-      this.device = discoveredDevice;
+      await this.setupNotifications(connectedDevice);
+      this.device = connectedDevice;
       this.isConnected = true;
 
-      console.log(`Connected to ESP-32 device: ${device.name || device.id}`);
+      console.log(`Connected to device: ${device.name || device.id}`);
     } catch (error) {
-      console.error("Failed to connect to ESP-32 device:", error);
+      console.error("Failed to connect to device:", error);
       this.isConnected = false;
-      throw error; // Rethrow so caller can handle it
+      throw error;
     }
   }
 
@@ -186,6 +168,8 @@ export class BLEService {
             console.error("Notification error:", error);
             return;
           }
+
+          console.log("Received characteristic:", characteristic);
 
           if (characteristic?.value) {
             const action = this.parseCharacteristicData(characteristic);
@@ -207,11 +191,11 @@ export class BLEService {
       const base64Value = characteristic.value;
       if (!base64Value) return "none";
 
-      const decodedValue = Buffer.from(base64Value, "base64").toString();
+      const decodedValue = atob(base64Value);
       console.log("Received BLE data:", decodedValue);
 
       // Parse the binary format from ESP32
-      if (decodedValue === "00") return "up";
+      if (decodedValue === "00") return "action";
       if (decodedValue === "01") return "right";
       if (decodedValue === "10") return "down";
       if (decodedValue === "11") return "left";
