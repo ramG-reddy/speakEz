@@ -28,16 +28,35 @@ export default function BLEDeviceSelector({
     onClose();
   };
 
-  // Render a device item
-  const renderDeviceItem = ({ item }: { item: Device }) => (
-    <TouchableOpacity
-      style={styles.deviceItem}
-      onPress={() => handleDeviceSelect(item)}
-    >
-      <Text style={styles.deviceName}>{item.name || "Unknown Device"}</Text>
-      <Text style={styles.deviceId}>{item.id}</Text>
-    </TouchableOpacity>
-  );
+  // Render a device item with ESP-32 highlighting
+  const renderDeviceItem = ({ item }: { item: Device }) => {
+    const isESP32 =
+      (item.name && item.name.includes("ESP")) ||
+      (item.localName && item.localName.includes("ESP"));
+
+    return (
+      <TouchableOpacity
+        style={[styles.deviceItem, isESP32 && styles.espDeviceItem]}
+        onPress={() => handleDeviceSelect(item)}
+      >
+        {isESP32 && (
+          <View style={styles.espBadge}>
+            <Text style={styles.espBadgeText}>ESP</Text>
+          </View>
+        )}
+        <Text style={[styles.deviceName, isESP32 && styles.espDeviceName]}>
+          {item.name || item.localName || "Unknown Device"}
+        </Text>
+        <Text style={styles.deviceId}>{item.id}</Text>
+        {item.rssi && (
+          <Text style={styles.signalStrength}>
+            Signal:{" "}
+            {Math.min(Math.max(2 * (item.rssi + 100), 0), 100).toFixed(0)}%
+          </Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <Modal
@@ -157,5 +176,31 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: "#666",
+  },
+  espDeviceItem: {
+    backgroundColor: "#f0f8ff", // Light blue for ESP devices
+    borderLeftWidth: 4,
+    borderLeftColor: "#4287f5",
+  },
+  espDeviceName: {
+    color: "#4287f5",
+  },
+  espBadge: {
+    backgroundColor: "#4287f5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 4,
+  },
+  espBadgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  signalStrength: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 4,
   },
 });
