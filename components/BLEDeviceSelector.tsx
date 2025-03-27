@@ -74,7 +74,7 @@ export default function BLEDeviceSelector({
             </TouchableOpacity>
           </View>
 
-          {isScanning ? (
+          {(isScanning && 0) ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#4287f5" />
               <Text style={styles.scanningText}>Scanning for devices...</Text>
