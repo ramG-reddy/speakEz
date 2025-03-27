@@ -12,12 +12,15 @@ export default function RootLayout() {
 
   return (
     <View className="flex-1 flex-row">
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { flex: 1 },
-        }}
-      />
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { flex: 1 },
+            animation: "fade",
+          }}
+        />
+      </View>
       <View
         style={{
           width: navPatchWidth,
