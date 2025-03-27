@@ -128,8 +128,8 @@ export default function WordBuilder() {
   );
 
   return (
-    <Pressable onPress={() => handleTap()} className="flex-1 p-4">
-      <Text className="text-4xl font-semibold px-2 mb-4">Word Builder</Text>
+    <Pressable onPress={() => handleTap()} className="flex-1 p-4 max-h-screen-safe overflow-scroll">
+      <Text className="text-2xl font-semibold px-2 mb-4">Word Builder</Text>
 
       {/* BLE Connection Button has been removed and moved to NavBar */}
 

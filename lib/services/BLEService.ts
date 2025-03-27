@@ -70,28 +70,60 @@ export class BLEService {
     this.notifyDeviceListeners(); // Notify listeners about empty list
 
     try {
-      await this.manager.startDeviceScan(null, null, (error, device) => {
+      // Enhanced scan options specifically for ESP-32 devices
+      const scanOptions = {
+        allowDuplicates: false,
+        scanMode: 1, // SCAN_MODE_LOW_LATENCY for Android
+        // On iOS, increasing the scan timeout can help find more devices
+        timeoutInterval: Platform.OS === "ios" ? 10000 : undefined,
+      };
+
+      await this.manager.startDeviceScan(null, scanOptions, (error, device) => {
         if (error) {
           console.error("BLE scan error:", error);
           this.isScanning = false;
-          return;
+
+          // Notify device listeners about error by passing empty array
+          this.notifyDeviceListeners();
+
+          // Rethrow error to be caught by caller
+          throw error;
         }
 
-        if (device && device.name) {
-          // Only add devices with names to avoid duplicates and unnamed devices
-          const isDuplicate = this.discoveredDevices.some(
-            (d) => d.id === device.id
-          );
+        if (device) {
+          // Include unnamed devices too, as some ESP-32 might not have a name
+          // but filter out devices with very low RSSI (signal strength)
+          const rssiThreshold = -90; // Adjust if needed
 
-          if (!isDuplicate) {
-            this.discoveredDevices.push(device);
-            this.notifyDeviceListeners();
+          if (
+            (device.name || device.localName || device.id) &&
+            (device.rssi === null || device.rssi > rssiThreshold)
+          ) {
+            // Check for duplication
+            const isDuplicate = this.discoveredDevices.some(
+              (d) => d.id === device.id
+            );
+
+            if (!isDuplicate) {
+              // Prioritize ESP-32 devices
+              if (
+                device.name?.includes("ESP") ||
+                device.localName?.includes("ESP")
+              ) {
+                // Add ESP devices to the front of the array
+                this.discoveredDevices.unshift(device);
+              } else {
+                this.discoveredDevices.push(device);
+              }
+              this.notifyDeviceListeners();
+            }
           }
         }
       });
     } catch (error) {
       console.error("Failed to start BLE scan:", error);
       this.isScanning = false;
+      throw error; // Rethrow to allow caller to handle
     }
   }
 
@@ -110,25 +142,33 @@ export class BLEService {
     try {
       this.stopScan();
 
+      // Connect to device with options optimized for ESP-32
+      const connectionOptions = {
+        timeout: 10000, // 10 seconds
+        autoConnect: true, // Try to auto-connect if connection is lost
+      };
+
       // Connect to device
-      const connectedDevice = await device.connect();
+      const connectedDevice = await device.connect(connectionOptions);
+
+      // Add a short delay to ensure proper connection
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Discover services and characteristics
       const discoveredDevice =
         await connectedDevice.discoverAllServicesAndCharacteristics();
 
-      // Setup notification listener if it's our target device
-      if (device.name === ESP32_NAME) {
-        await this.setupNotifications(discoveredDevice);
-      }
+      // Setup notification listener for our service/characteristic
+      await this.setupNotifications(discoveredDevice);
 
       this.device = discoveredDevice;
       this.isConnected = true;
 
-      console.log(`Connected to device: ${device.name || device.id}`);
+      console.log(`Connected to ESP-32 device: ${device.name || device.id}`);
     } catch (error) {
-      console.error("Failed to connect to device:", error);
+      console.error("Failed to connect to ESP-32 device:", error);
       this.isConnected = false;
+      throw error; // Rethrow so caller can handle it
     }
   }
 
