@@ -9,14 +9,29 @@ import { Link } from "expo-router";
 import { useBLE } from "@/lib/context/BLEContext";
 import { useState } from "react";
 import BLEDeviceSelector from "./BLEDeviceSelector";
+import { useNotification } from "@/lib/context/NotificationContext";
 
 export default function NavBar() {
-  const { isConnected, startScan, isScanning } = useBLE();
+  const { isConnected, startScan, isScanning, disconnect } = useBLE();
   const [showDeviceSelector, setShowDeviceSelector] = useState(false);
+  const { showNotification } = useNotification();
 
   const handleOpenDeviceSelector = () => {
     startScan(); // Start scanning when opening the selector
     setShowDeviceSelector(true);
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      showNotification("Device disconnected successfully.", "success");
+    } catch (error) {
+      console.error("Failed to disconnect:", error);
+      showNotification(
+        "Failed to disconnect the device. Please try again.",
+        "error"
+      );
+    }
   };
 
   return (
@@ -38,6 +53,16 @@ export default function NavBar() {
             <Text style={styles.bleButtonText}>
               {isScanning ? "Scanning..." : "Connect BLE"}
             </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Disconnect Button - Only show when connected */}
+        {isConnected && (
+          <TouchableOpacity
+            onPress={handleDisconnect}
+            style={styles.disconnectButton}
+          >
+            <Text style={styles.disconnectButtonText}>Disconnect</Text>
           </TouchableOpacity>
         )}
 
@@ -74,6 +99,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#808080",
   },
   bleButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  disconnectButton: {
+    backgroundColor: "#f44336",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  disconnectButtonText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 12,

@@ -167,8 +167,6 @@ export class BLEService {
             return;
           }
 
-          console.log("Received characteristic:", characteristic);
-
           if (characteristic?.value) {
             const action = this.parseCharacteristicData(characteristic);
             this.notifyListeners(action);
@@ -221,6 +219,7 @@ export class BLEService {
       this.device = null;
     } catch (error) {
       console.error("Failed to disconnect:", error);
+      throw new Error("An unexpected error occurred while disconnecting.");
     }
   }
 
