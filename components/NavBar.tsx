@@ -10,6 +10,7 @@ import { useBLE } from "@/lib/context/BLEContext";
 import { useState } from "react";
 import BLEDeviceSelector from "./BLEDeviceSelector";
 import { useNotification } from "@/lib/context/NotificationContext";
+import { bleService } from "@/lib/services/BLEService";
 
 export default function NavBar() {
   const { isConnected, startScan, isScanning, disconnect } = useBLE();
@@ -82,7 +83,10 @@ export default function NavBar() {
       {/* Device selector modal */}
       <BLEDeviceSelector
         visible={showDeviceSelector}
-        onClose={() => setShowDeviceSelector(false)}
+        onClose={() => {
+          setShowDeviceSelector(false);
+          bleService.stopScan(); // Stop scanning when closing the selector
+        }}
       />
     </View>
   );

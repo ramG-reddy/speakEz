@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "80%",
-    maxHeight: "70%",
+    maxHeight: "80%",
     backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
@@ -121,21 +121,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 5,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
   },
   closeButton: {
-    fontSize: 24,
+    fontSize: 15,
     color: "#666",
   },
   deviceList: {
     marginVertical: 10,
   },
   deviceItem: {
-    padding: 15,
+    padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
