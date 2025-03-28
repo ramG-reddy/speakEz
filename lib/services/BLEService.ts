@@ -92,12 +92,10 @@ export class BLEService {
             );
 
             if (!isDuplicate) {
-              console.log("Discovered device:", device);
               // Prioritize ESP-32 devices
               if (
                 device.name?.includes("ESP") ||
-                device.localName?.includes("ESP") ||
-                1
+                device.localName?.includes("ESP")
               ) {
                 // Add ESP devices to the front of the array
                 this.discoveredDevices.unshift(device);
