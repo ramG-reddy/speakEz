@@ -3,6 +3,7 @@ import { Device } from "react-native-ble-plx";
 import { bleService, NavigationAction } from "../services/BLEService";
 import { Platform, Alert, PermissionsAndroid, Linking } from "react-native";
 import { BluetoothPermissionModal } from "@/components/BluetoothPermissionModal";
+import { useNotification } from "./NotificationContext";
 
 // Define permission status types
 export type PermissionStatus =
@@ -97,6 +98,9 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionBlocked, setPermissionBlocked] = useState(false);
 
+  // Get notification function
+  const { showNotification } = useNotification();
+
   // Check permissions on mount
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -117,6 +121,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     bleService.initialize();
 
     // Set up action listener
+    
     const actionListener = (action: NavigationAction) => {
       setLastAction(action);
     };
@@ -266,10 +271,9 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to start scan:", error);
       setIsScanning(false);
-      Alert.alert(
-        "Bluetooth Error",
+      showNotification(
         "Failed to scan for Bluetooth devices. Please make sure Bluetooth is enabled.",
-        [{ text: "OK" }]
+        "error"
       );
     }
   };
@@ -296,12 +300,12 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     try {
       await bleService.connectToDevice(device);
       setIsConnected(bleService.isDeviceConnected());
+      showNotification(`Connected to ${device.name || "device"}`, "success");
     } catch (error) {
       console.error("Failed to connect:", error);
-      Alert.alert(
-        "Connection Error",
+      showNotification(
         "Failed to connect to the device. Please try again.",
-        [{ text: "OK" }]
+        "error"
       );
     }
   };
