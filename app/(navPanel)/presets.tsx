@@ -1,7 +1,9 @@
 import { useAppContext } from "@/lib/context/AppContext";
+import { useBLE } from "@/lib/context/BLEContext";
 import { PRESETS } from "@/lib/constants/Data";
 import { handleInput } from "@/lib/utils/handleInput";
 import { useGridScroll } from "@/lib/hooks/useGridScroll";
+import { useBLEInput } from "@/lib/hooks/useBLEInput";
 import { useEffect, useState } from "react";
 import {
   FlatList,
@@ -21,6 +23,7 @@ export default function Presets() {
   const [presetArray, setPresetArray] = useState(PRESETS);
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
+  const { isConnected } = useBLE();
 
   // Use the grid scroll hook
   const { handleItemLayout, safeScrollToPosition, getListProps } =
@@ -29,6 +32,7 @@ export default function Presets() {
       isSmallDevice,
     });
 
+  // Add word builder to presets array
   useEffect(() => {
     setPresetArray((prev) => {
       const newPresets = [
@@ -42,27 +46,46 @@ export default function Presets() {
     });
   }, []);
 
+  // Define the action handler to avoid code duplication
+  const handlePresetAction = () => {
+    if (presetArray[selectedPreset]?.id === "wordBuilder") {
+      router.push("./word-builder");
+      return;
+    }
+    const phrase = `${presetArray[selectedPreset]?.text || ""}`;
+    console.log(phrase);
+    speakText(phrase);
+  };
+
+  // Use the BLE input hook to respond to hardware controls
+  const { currentIndex } = useBLEInput({
+    array: presetArray,
+    index: selectedPreset,
+    numCols,
+    onAction: handlePresetAction,
+    isEnabled: isConnected, // Only enable when connected
+  });
+
+  // Update selected preset when BLE input changes
+  useEffect(() => {
+    if (currentIndex >= 0 && currentIndex < presetArray.length) {
+      setSelectedPreset(currentIndex);
+    }
+  }, [currentIndex, presetArray.length]);
+
   // Auto-scroll to the selected preset
   useEffect(() => {
     safeScrollToPosition(selectedPreset, presetArray.length);
   }, [selectedPreset, presetArray.length]);
 
-  // Handle tap event
+  // Handle tap event (manual input)
   const handleTap = () => {
     let nextPreset = handleInput({
       currHighlithedNav,
       array: presetArray,
       index: selectedPreset,
-      numCols: 3,
-      onAction: () => {
-        if (presetArray[selectedPreset]?.id === "wordBuilder") {
-          router.push("./word-builder");
-          return;
-        }
-        const phrase = `${presetArray[selectedPreset]?.text || ""}`;
-        console.log(phrase);
-        speakText(phrase);
-      },
+      numCols,
+      onAction: handlePresetAction,
     });
 
     // Ensure we have a valid index
