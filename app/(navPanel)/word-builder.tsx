@@ -34,42 +34,7 @@ export default function WordBuilder() {
       isSmallDevice,
     });
 
-  // Use the BLE input hook
-  const { currentIndex } = useBLEInput({
-    array: wordArray,
-    index: selectedWord,
-    numCols,
-    onAction: () => {
-      if (!isButtonHighlighted) {
-        if (selectedWord >= 0 && selectedWord < wordArray.length) {
-          const word = wordArray[selectedWord].data;
-          addWordToSentence(word);
-        }
-      } else {
-        if (highlightedButton === 0) {
-          setSentence(""); // Clear action
-        } else {
-          console.log(sentence);
-          speakText(sentence);
-        }
-      }
-    },
-    isEnabled: isConnected, // Only enable when connected
-  });
-
-  // Update selected word when BLE input changes
-  useEffect(() => {
-    if (currentIndex >= 0 && currentIndex < wordArray.length) {
-      setSelectedWord(currentIndex);
-    }
-  }, [currentIndex, wordArray.length]);
-
-  // Auto-scroll to the selected word
-  useEffect(() => {
-    safeScrollToPosition(selectedWord, wordArray.length, isButtonHighlighted);
-  }, [selectedWord, isButtonHighlighted, wordArray.length]);
-
-  // Use the helper function when adding words
+  // Helper function for adding words to sentence
   const addWordToSentence = (word: string) => {
     setSentence((prev) => {
       if (prev === "") {
@@ -78,6 +43,59 @@ export default function WordBuilder() {
       return `${prev} ${word}`;
     });
   };
+
+  // Define action handlers to avoid code duplication
+  const handleWordAction = () => {
+    if (!isButtonHighlighted) {
+      if (selectedWord >= 0 && selectedWord < wordArray.length) {
+        const word = wordArray[selectedWord].data;
+        addWordToSentence(word);
+      }
+    }
+  };
+
+  const handleButtonAction = () => {
+    if (highlightedButton === 0) {
+      setSentence(""); // Clear action
+    } else {
+      console.log(sentence);
+      speakText(sentence);
+    }
+  };
+
+  // Combined action handler for both words and buttons
+  const handleCombinedAction = () => {
+    if (isButtonHighlighted) {
+      handleButtonAction();
+    } else {
+      handleWordAction();
+    }
+  };
+
+  // Use the BLE input hook
+  const { currentIndex } = useBLEInput({
+    array: wordArray,
+    index: selectedWord,
+    numCols,
+    onAction: handleCombinedAction,
+    isEnabled: isConnected && !isButtonHighlighted, // Only enable for word grid when connected
+  });
+
+  // Update selected word when BLE input changes
+  useEffect(() => {
+    if (
+      !isButtonHighlighted &&
+      currentIndex >= 0 &&
+      currentIndex < wordArray.length
+    ) {
+      setSelectedWord(currentIndex);
+    }
+  }, [currentIndex, wordArray.length, isButtonHighlighted]);
+
+  // Auto-scroll to the selected word
+  useEffect(() => {
+    safeScrollToPosition(selectedWord, wordArray.length, isButtonHighlighted);
+  }, [selectedWord, isButtonHighlighted, wordArray.length]);
 
   // Handle tap event (manual input)
   const handleTap = () => {
@@ -96,13 +114,7 @@ export default function WordBuilder() {
         return;
       } else if (currHighlithedNav === "action") {
         // Perform button action
-        if (highlightedButton === 0) {
-          setSentence(""); // Clear action
-        } else {
-          // Speak action with enhanced pronunciation
-          console.log(sentence);
-          speakText(sentence);
-        }
+        handleButtonAction();
         return;
       }
       return;
@@ -120,12 +132,7 @@ export default function WordBuilder() {
       array: wordArray,
       index: selectedWord,
       numCols,
-      onAction: () => {
-        if (selectedWord >= 0 && selectedWord < wordArray.length) {
-          const word = wordArray[selectedWord].data;
-          addWordToSentence(word);
-        }
-      },
+      onAction: handleWordAction,
     });
 
     // Ensure we have a valid index

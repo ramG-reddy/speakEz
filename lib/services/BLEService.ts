@@ -191,12 +191,13 @@ export class BLEService {
       console.log("Received BLE data:", decodedValue);
 
       // Parse the binary format from ESP32
-      if (decodedValue === "00") return "action";
-      if (decodedValue === "01") return "right";
-      if (decodedValue === "10") return "down";
-      if (decodedValue === "11") return "left";
-
-      return "action"; // Default to action if none of the above patterns match
+      if (decodedValue === "1,0,0,0") return "left";
+      if (decodedValue === "0,0,0,1") return "right";
+      if (decodedValue === "0,1,0,0") return "up";
+      if (decodedValue === "0,0,1,0") return "down";
+      if(decodedValue !== "0,0,0,0") return "action";
+      
+      return "none"; // Default to "none" if none of the above patterns match
     } catch (error) {
       console.error("Failed to parse characteristic data:", error);
       return "none";
