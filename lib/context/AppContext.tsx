@@ -1,8 +1,9 @@
 import { createContext, useContext, useState } from "react";
+import { NavAction } from "@/lib/types";
 
 const AppContext = createContext({
-  currHighlithedNav: "right",
-  setCurrHighlightedNav: (highlight: string) => {},
+  currHighlithedNav: "right" as NavAction,
+  setCurrHighlightedNav: (highlight: NavAction) => {},
 });
 
 export const AppContextProvider = ({
@@ -10,7 +11,7 @@ export const AppContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [currHighlithedNav, setCurrHighlightedNav] = useState("right");
+  const [currHighlithedNav, setCurrHighlightedNav] = useState<NavAction>("right");
 
   return (
     <AppContext.Provider value={{ currHighlithedNav, setCurrHighlightedNav }}>

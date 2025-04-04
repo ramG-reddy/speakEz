@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Device } from "react-native-ble-plx";
-import { bleService, NavigationAction } from "../services/BLEService";
-import { Platform, Alert, PermissionsAndroid, Linking } from "react-native";
 import { BluetoothPermissionModal } from "@/components/BluetoothPermissionModal";
+import { bleService } from "@/lib/services/BLEService";
+import { NavAction } from "@/lib/types";
+import { createContext, useContext, useEffect, useState } from "react";
+import { Linking, PermissionsAndroid, Platform } from "react-native";
+import { Device } from "react-native-ble-plx";
 import { useNotification } from "./NotificationContext";
 
 // Define permission status types
@@ -16,7 +17,7 @@ export type PermissionStatus =
 // Define context type
 type BLEContextType = {
   isConnected: boolean;
-  lastAction: NavigationAction;
+  lastAction: NavAction;
   startScan: () => void;
   stopScan: () => void;
   discoveredDevices: Device[];
@@ -90,7 +91,7 @@ const checkBluetoothPermissions = async (): Promise<PermissionStatus> => {
 // Provider component
 export function BLEProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastAction, setLastAction] = useState<NavigationAction>("none");
+  const [lastAction, setLastAction] = useState<NavAction>("none");
   const [discoveredDevices, setDiscoveredDevices] = useState<Device[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [permissionStatus, setPermissionStatus] =
@@ -122,7 +123,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
 
     // Set up action listener
     
-    const actionListener = (action: NavigationAction) => {
+    const actionListener = (action: NavAction) => {
       console.log("Received action:", action);
       setLastAction(action);
     };

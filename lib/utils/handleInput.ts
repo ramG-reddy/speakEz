@@ -1,5 +1,7 @@
+import { NavAction } from "@/lib/types";
+
 type HandleInputArgs = {
-  currHighlithedNav: string;
+  currHighlithedNav: NavAction;
   array: any;
   index: number;
   numCols: number;

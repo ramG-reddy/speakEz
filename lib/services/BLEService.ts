@@ -1,31 +1,23 @@
 import {
-  BleManager,
-  Device,
-  Characteristic,
-  State,
-} from "react-native-ble-plx";
+  CHARACTERISTIC_UUID,
+  SERVICE_UUID
+} from "@/lib/constants/Config";
+import { NavAction } from "@/lib/types";
 import { Platform } from "react-native";
 import {
-  CHARACTERISTIC_UUID,
-  ESP32_NAME,
-  SERVICE_UUID,
-} from "../constants/Config";
-
-// Navigation actions
-export type NavigationAction =
-  | "up"
-  | "down"
-  | "left"
-  | "right"
-  | "action"
-  | "none";
+  BleManager,
+  Characteristic,
+  Device,
+  State,
+} from "react-native-ble-plx";
+import { handleDecodedValue } from "@/lib/utils/handleDecodedValue";
 
 export class BLEService {
   private manager: BleManager | null = null;
   private device: Device | null = null;
   private isScanning = false;
   private isConnected = false;
-  private listeners: Array<(action: NavigationAction) => void> = [];
+  private listeners: Array<(action: NavAction) => void> = [];
   private deviceListeners: Array<(devices: Device[]) => void> = [];
   private discoveredDevices: Device[] = [];
 
@@ -181,7 +173,7 @@ export class BLEService {
   // Parse the data received from ESP32
   private parseCharacteristicData(
     characteristic: Characteristic
-  ): NavigationAction {
+  ): NavAction {
     try {
       // Decode base64 data
       const base64Value = characteristic.value;
@@ -190,14 +182,13 @@ export class BLEService {
       const decodedValue = atob(base64Value);
       console.log("Received BLE data:", decodedValue);
 
-      // Parse the binary format from ESP32
-      if (decodedValue === "1,0,0,0") return "left";
-      if (decodedValue === "0,0,0,1") return "right";
-      if (decodedValue === "0,1,0,0") return "up";
-      if (decodedValue === "0,0,1,0") return "down";
-      if(decodedValue !== "0,0,0,0") return "action";
-      
-      return "none"; // Default to "none" if none of the above patterns match
+      try {
+        const action = handleDecodedValue(decodedValue);
+        return action;
+      } catch (error) {
+        console.error("DECODE ERROR:", error);
+        return "none";
+      }
     } catch (error) {
       console.error("Failed to parse characteristic data:", error);
       return "none";
@@ -225,12 +216,12 @@ export class BLEService {
   }
 
   // Add listener for navigation actions
-  addListener(callback: (action: NavigationAction) => void): void {
+  addListener(callback: (action: NavAction) => void): void {
     this.listeners.push(callback);
   }
 
   // Remove listener
-  removeListener(callback: (action: NavigationAction) => void): void {
+  removeListener(callback: (action: NavAction) => void): void {
     this.listeners = this.listeners.filter((listener) => listener !== callback);
   }
 
@@ -249,7 +240,7 @@ export class BLEService {
   }
 
   // Notify all listeners
-  private notifyListeners(action: NavigationAction): void {
+  private notifyListeners(action: NavAction): void {
     this.listeners.forEach((listener) => listener(action));
   }
 
