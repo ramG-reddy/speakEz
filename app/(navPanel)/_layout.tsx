@@ -23,7 +23,7 @@ export default function NavPanelLayout() {
       <View
         style={{
           width: navPatchWidth,
-          backgroundColor: "#e2e8f0", // bg-slate-200 equivalent
+          backgroundColor: "#D5F2FF", // bg-slate-200 equivalent
           justifyContent: "center",
           alignItems: "center",
           paddingBottom: insets.bottom,
