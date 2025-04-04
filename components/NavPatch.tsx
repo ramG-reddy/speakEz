@@ -32,15 +32,15 @@ export default function NavigationControl() {
   const textSize = isSmallDevice ? "text-xl" : "text-3xl";
 
   const buttonClass = `${buttonSize} flex items-center justify-center border border-gray-300 rounded-md`;
-  const highlightedClass = "bg-green-200 border-black";
+  const highlightedClass = "bg-[#ADFF5B] border-black";
   const buttonTextClass = `${textSize} text-black font-bold`;
 
   // Image size based on device size
   const imageSize = isSmallDevice ? 28 : 36;
 
   return (
-    <View className="w-auto p-2 md:p-4 border border-gray-300 rounded-lg bg-gray-100 flex flex-col items-center justify-center">
-      <View className="flex flex-row gap-1 m-1">
+    <View className="w-auto p-2 md:p-4 border border-gray-300 rounded-lg bg-[#72919E] flex flex-col items-center justify-center">
+      <View className="flex flex-row gap-2 m-2">
         <View
           className={`${buttonClass} ${
             currHighlithedNav === "up" ? highlightedClass : "bg-white"
@@ -52,7 +52,7 @@ export default function NavigationControl() {
           />
         </View>
       </View>
-      <View className="flex flex-row gap-1">
+      <View className="flex flex-row gap-2">
         <View
           className={`${buttonClass} ${
             currHighlithedNav === "left" ? highlightedClass : "bg-white"
@@ -89,7 +89,7 @@ export default function NavigationControl() {
           />
         </View>
       </View>
-      <View className="flex flex-row gap-1 m-1">
+      <View className="flex flex-row gap-2 m-2">
         <View
           className={`${buttonClass} ${
             currHighlithedNav === "down" ? highlightedClass : "bg-white"

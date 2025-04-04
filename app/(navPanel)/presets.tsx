@@ -22,7 +22,7 @@ export default function Presets() {
   const numCols = 3;
   const [presetArray, setPresetArray] = useState(PRESETS);
   const { width } = Dimensions.get("window");
-  const isSmallDevice = width < 768;
+  const isSmallDevice = width < 1024;
   const { isConnected } = useBLE();
 
   // Use the grid scroll hook
@@ -105,7 +105,7 @@ export default function Presets() {
       style={[
         styles.presetCard,
         selectedPreset === index && styles.selectedPreset,
-        item.id === "wordBuilder" && { backgroundColor: "#bedead" },
+        item.id === "wordBuilder" && { backgroundColor: "#ADFF5B" },
       ]}
       onLayout={index === 0 ? handleItemLayout : undefined}
     >
@@ -118,7 +118,10 @@ export default function Presets() {
   );
 
   return (
-    <Pressable onPress={() => handleTap()} className="flex-1 p-2 md:p-4">
+    <Pressable
+      onPress={() => handleTap()}
+      className="flex-1 p-2 md:p-4 bg-[#72919E]"
+    >
       <Text
         className={`${
           isSmallDevice ? "text-2xl" : "text-4xl"
@@ -144,16 +147,13 @@ export default function Presets() {
 const styles = StyleSheet.create({
   presetCard: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 12,
     margin: 4,
-    borderWidth: 1,
-    borderColor: "#333",
   },
   selectedPreset: {
-    borderColor: "#00f",
-    borderWidth: 2,
+    backgroundColor: "#ADFF5B",
   },
   presetText: {
     color: "#000",

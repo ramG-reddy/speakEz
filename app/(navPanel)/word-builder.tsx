@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -25,7 +26,10 @@ export default function WordBuilder() {
   const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
   const { isConnected } = useBLE();
   const { width } = Dimensions.get("window");
-  const isSmallDevice = width < 768;
+  const isSmallDevice = width < 1024;
+
+  // Image size based on device size
+  const imageSize = isSmallDevice ? 20 : 36;
 
   // Use the grid scroll hook
   const { handleItemLayout, safeScrollToPosition, getListProps } =
@@ -162,7 +166,10 @@ export default function WordBuilder() {
   );
 
   return (
-    <Pressable onPress={() => handleTap()} className="flex-1 p-2 md:p-4">
+    <Pressable
+      onPress={() => handleTap()}
+      className="flex-1 p-2 md:p-4 bg-[#72919E]"
+    >
       <Text
         className={`${
           isSmallDevice ? "text-2xl" : "text-4xl"
@@ -171,10 +178,7 @@ export default function WordBuilder() {
         Word Builder
       </Text>
 
-      <View
-        style={styles.textArea}
-        className="px-2 py-2 m-1 md:px-4 md:py-2 md:m-2"
-      >
+      <View style={styles.textArea} className="m-1 p-1">
         <View style={styles.inputContainer}>
           <Text
             style={[
@@ -185,47 +189,47 @@ export default function WordBuilder() {
             {sentence}
           </Text>
         </View>
-        <View className="flex flex-row justify-between px-2 py-1 md:px-4 md:py-2 gap-1 md:gap-2">
-          <Pressable
-            onPress={() => setSentence("")}
-            style={[
-              styles.textAreaBtn,
-              { backgroundColor: "#f00" },
-              isButtonHighlighted &&
-                highlightedButton === 0 &&
-                styles.selectedButton,
-            ]}
-          >
-            <Text
+        <View className="flex flex-row justify-between items-center p-1 gap-1">
+          <View>
+            <Pressable
+              onPress={() => setSentence("")}
               style={[
-                styles.buttonText,
-                isSmallDevice && styles.smallButtonText,
+                styles.textAreaBtn,
+                { backgroundColor: "#f00" },
+                isButtonHighlighted &&
+                  highlightedButton === 0 &&
+                  styles.selectedButton,
               ]}
             >
-              Clear
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              speakText(sentence);
-            }}
-            style={[
-              styles.textAreaBtn,
-              { backgroundColor: "#0f0" },
-              isButtonHighlighted &&
-                highlightedButton === 1 &&
-                styles.selectedButton,
-            ]}
-          >
-            <Text
+              <Image
+                source={require("@/assets/images/close.png")}
+                style={{ width: imageSize, height: imageSize }}
+              />
+            </Pressable>
+          </View>
+          <View>
+            <Pressable
+              onPress={() => {
+                speakText(sentence);
+              }}
               style={[
-                styles.buttonText,
-                isSmallDevice && styles.smallButtonText,
+                styles.textAreaBtn,
+                { backgroundColor: "#73C4FF" },
+                isButtonHighlighted &&
+                  highlightedButton === 1 &&
+                  styles.selectedButton,
               ]}
             >
-              Speak
-            </Text>
-          </Pressable>
+              <Image
+                source={require("@/assets/images/arrow.png")}
+                style={{
+                  width: imageSize,
+                  height: imageSize,
+                  transform: [{ rotate: "90deg" }],
+                }}
+              />
+            </Pressable>
+          </View>
         </View>
       </View>
       <FlatList
@@ -245,8 +249,6 @@ export default function WordBuilder() {
 
 const styles = StyleSheet.create({
   textArea: {
-    borderColor: "#333",
-    borderWidth: 1,
     borderRadius: 8,
     backgroundColor: "#fff",
     flexDirection: "row",
@@ -283,16 +285,13 @@ const styles = StyleSheet.create({
   },
   wordCard: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 12,
     margin: 4,
-    borderWidth: 1,
-    borderColor: "#333",
   },
   selectedWord: {
-    borderColor: "#00f",
-    borderWidth: 4,
+    backgroundColor: "#ADFF5B",
   },
   wordText: {
     color: "#000",
@@ -303,7 +302,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   selectedButton: {
-    borderColor: "#00f",
-    borderWidth: 2,
+    // borderColor: "#000",
+    // borderWidth: 3,
+    backgroundColor: "#ADFF5B",
   },
 });
