@@ -1,9 +1,9 @@
 import NavPatch from "@/components/NavPatch";
 import { Stack } from "expo-router";
-import { View, Dimensions } from "react-native";
+import { Dimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function RootLayout() {
+export default function NavPanelLayout() {
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get("window");
 
@@ -17,7 +17,6 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             contentStyle: { flex: 1 },
-            animation: "fade",
           }}
         />
       </View>
