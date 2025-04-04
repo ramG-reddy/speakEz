@@ -37,7 +37,7 @@ export const useBLEInput = ({
 
       setCurrentIndex(nextIndex);
     }
-  }, [lastAction, array, currentIndex, numCols, onAction, isEnabled]);
+  }, [lastAction, isEnabled]);
 
   return { currentIndex };
 };
