@@ -1,4 +1,4 @@
-import { View, Text, Dimensions } from "react-native";
+import { View, Text, Dimensions, Image } from "react-native";
 import { useEffect, useState } from "react";
 import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/lib/constants/Config";
 import { useAppContext } from "@/lib/context/AppContext";
@@ -7,7 +7,7 @@ export default function NavigationControl() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const dirs = ORDER_OF_HIGHLIGHTS;
   const { width } = Dimensions.get("window");
-  const isSmallDevice = width < 768;
+  const isSmallDevice = width < 1024;
 
   const { currHighlithedNav, setCurrHighlightedNav } = useAppContext();
 
@@ -27,13 +27,16 @@ export default function NavigationControl() {
 
   // Adjust sizes based on screen width
   const buttonSize = isSmallDevice
-    ? "w-6 h-6"
-    : "w-12 h-12 max-md:w-10 max-md:h-10";
-  const textSize = isSmallDevice ? "text-md" : "text-2xl";
+    ? "w-12 h-12"
+    : "w-16 h-16";
+  const textSize = isSmallDevice ? "text-xl" : "text-3xl";
 
   const buttonClass = `${buttonSize} flex items-center justify-center border border-gray-300 rounded-md`;
   const highlightedClass = "bg-green-200 border-black";
-  const buttonTextClass = `${textSize} text-black`;
+  const buttonTextClass = `${textSize} text-black font-bold`;
+
+  // Image size based on device size
+  const imageSize = isSmallDevice ? 28 : 36;
 
   return (
     <View className="w-auto p-2 md:p-4 border border-gray-300 rounded-lg bg-gray-100 flex flex-col items-center justify-center">
@@ -43,7 +46,10 @@ export default function NavigationControl() {
             currHighlithedNav === "up" ? highlightedClass : "bg-white"
           }`}
         >
-          <Text className={buttonTextClass}>↑</Text>
+          <Image
+            source={require("@/assets/images/arrow.png")}
+            style={{ width: imageSize, height: imageSize }}
+          />
         </View>
       </View>
       <View className="flex flex-row gap-1">
@@ -52,7 +58,14 @@ export default function NavigationControl() {
             currHighlithedNav === "left" ? highlightedClass : "bg-white"
           }`}
         >
-          <Text className={buttonTextClass}>←</Text>
+          <Image
+            source={require("@/assets/images/arrow.png")}
+            style={{
+              width: imageSize,
+              height: imageSize,
+              transform: [{ rotate: "-90deg" }],
+            }}
+          />
         </View>
         <View
           className={`${buttonClass} ${
@@ -66,7 +79,14 @@ export default function NavigationControl() {
             currHighlithedNav === "right" ? highlightedClass : "bg-white"
           }`}
         >
-          <Text className={buttonTextClass}>→</Text>
+          <Image
+            source={require("@/assets/images/arrow.png")}
+            style={{
+              width: imageSize,
+              height: imageSize,
+              transform: [{ rotate: "90deg" }],
+            }}
+          />
         </View>
       </View>
       <View className="flex flex-row gap-1 m-1">
@@ -75,7 +95,14 @@ export default function NavigationControl() {
             currHighlithedNav === "down" ? highlightedClass : "bg-white"
           }`}
         >
-          <Text className={buttonTextClass}>↓</Text>
+          <Image
+            source={require("@/assets/images/arrow.png")}
+            style={{
+              width: imageSize,
+              height: imageSize,
+              transform: [{ rotate: "180deg" }],
+            }}
+          />
         </View>
       </View>
     </View>
