@@ -4,6 +4,7 @@ import { useBLE } from "@/lib/context/BLEContext";
 import { useBLEInput } from "@/lib/hooks/useBLEInput";
 import { handleInput } from "@/lib/utils/handleInput";
 import { speakText } from "@/lib/utils/speakText";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -16,6 +17,8 @@ import {
 } from "react-native";
 
 export default function WordBuilder() {
+  const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
+  const { isConnected } = useBLE();
   const numCols = 12;
   const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
 
@@ -31,9 +34,6 @@ export default function WordBuilder() {
     useState(0);
   const [bottomHighlightedButton, setBottomHighlightedButton] = useState(0); // 0 for Clear, 1 for Done
 
-  const { currHighlithedNav } = useAppContext();
-  const { isConnected } = useBLE();
-  
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
@@ -45,18 +45,27 @@ export default function WordBuilder() {
     setPhrase((prev) => prev + key);
   };
 
+  const addToSentence = (data: string) => {
+    const newSentence = textAreaValue.trim()+ " " + data.trim();
+    setTextAreaValue(newSentence);
+  }
+
   const handleTopButtonAction = () => {
     if (topHighlightedButton === 0) {
       setPhrase(""); // Clear action
     } else {
-      speakText(phrase); // Done action
+      addToSentence(phrase); // Done action
+      setPhrase(""); // Clear the phrase after sending it to the sentence builder page
+      router.push("./sentence-builder"); // Navigate to the sentence builder page
     }
   };
 
   const handleSuggestionAction = () => {
     const selectedSuggestion = suggestionsArray[highlightedSuggestionIndex];
     console.log(selectedSuggestion);
-    // TODO: Send this to the sentence builder page and append to the sentance in the sentence builder page
+    addToSentence(selectedSuggestion.data); // Add the selected suggestion to the sentence
+    setPhrase("");
+    router.push("./sentence-builder"); // Navigate to the sentence builder page
   };
 
   const handleBottomButtonAction = () => {

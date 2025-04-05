@@ -18,25 +18,28 @@ import {
 } from "react-native";
 
 export default function SentenceBuilder() {
+  const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
+  const { isConnected } = useBLE();
   const numCols = 3;
   const [wordArray, setWordArray] = useState(MOCK_DATA);
 
   const [selectedWord, setSelectedWord] = useState(0);
-  const [sentence, setSentence] = useState("");
-  
+  const [sentence, setSentence] = useState(textAreaValue);
+
   const [isTopButtonHighlighted, setIsTopButtonHighlighted] = useState(false);
   const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
   const [isBottomButtonHighlighted, setIsBottomButtonHighlighted] =
     useState(false);
   const [bottomHighlightedButton, setBottomHighlightedButton] = useState(0); // 0 for Back, 1 for Word Builder
 
-  const { currHighlithedNav } = useAppContext();
-  const { isConnected } = useBLE();
-
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
   const imageSize = isSmallDevice ? 20 : 36;
+
+  useEffect(() => {
+    setTextAreaValue(sentence);
+  }, [sentence]);
 
   // Use the grid scroll hook
   const { handleItemLayout, safeScrollToPosition, getListProps } =
