@@ -17,17 +17,20 @@ import { router } from "expo-router";
 import { speakText } from "@/lib/utils/speakText";
 
 export default function Presets() {
-  const [selectedPreset, setSelectedPreset] = useState(0);
-  const { currHighlithedNav } = useAppContext();
   const numCols = 3;
   const [presetArray, setPresetArray] = useState(PRESETS);
+
+  const [selectedPreset, setSelectedPreset] = useState(0);
+  
+  const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
+  const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Settings, 1 for Word Builder
+
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
+  
+  const { currHighlithedNav } = useAppContext();
   const { isConnected } = useBLE();
-  // Add state for button highlighting
-  const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
-  const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Settings, 1 for Word Builder
 
   // Use the grid scroll hook
   const { handleItemLayout, safeScrollToPosition, getListProps } =

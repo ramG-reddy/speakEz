@@ -5,7 +5,7 @@ type HandleInputArgs = {
   array: any;
   index: number;
   numCols: number;
-  onAction: () => any;
+  onAction: (props?: any) => void;
 }
 
 export const handleInput = ({

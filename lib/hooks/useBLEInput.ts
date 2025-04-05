@@ -7,7 +7,7 @@ type UseBLEInputProps = {
   array: any[];
   index: number;
   numCols: number;
-  onAction: () => void;
+  onAction: (props?: any) => void;
   isEnabled?: boolean;
 };
 

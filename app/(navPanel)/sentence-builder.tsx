@@ -18,23 +18,24 @@ import {
 } from "react-native";
 
 export default function SentenceBuilder() {
-  const [selectedWord, setSelectedWord] = useState(0);
-  const [sentence, setSentence] = useState("");
-  const { currHighlithedNav } = useAppContext();
   const numCols = 3;
   const [wordArray, setWordArray] = useState(MOCK_DATA);
+
+  const [selectedWord, setSelectedWord] = useState(0);
+  const [sentence, setSentence] = useState("");
+  
   const [isTopButtonHighlighted, setIsTopButtonHighlighted] = useState(false);
   const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
+  const [isBottomButtonHighlighted, setIsBottomButtonHighlighted] =
+    useState(false);
+  const [bottomHighlightedButton, setBottomHighlightedButton] = useState(0); // 0 for Back, 1 for Word Builder
+
+  const { currHighlithedNav } = useAppContext();
   const { isConnected } = useBLE();
+
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
-
-  // Add state for bottom navigation buttons
-  const [isBottomButtonHighlighted, setIsBottomButtonHighlighted] = useState(false);
-  const [highlightedNavButton, setHighlightedNavButton] = useState(0); // 0 for Back, 1 for Sentence Builder
-
-  // Image size based on device size
   const imageSize = isSmallDevice ? 20 : 36;
 
   // Use the grid scroll hook
@@ -75,7 +76,7 @@ export default function SentenceBuilder() {
 
   // Handle navigation button actions
   const handleNavButtonAction = () => {
-    if (highlightedNavButton === 0) {
+    if (bottomHighlightedButton === 0) {
       router.push("./presets");
     } else {
       router.push("./word-builder");
@@ -99,7 +100,8 @@ export default function SentenceBuilder() {
     index: selectedWord,
     numCols,
     onAction: handleCombinedAction,
-    isEnabled: isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted, // Only enable for word grid when connected
+    isEnabled:
+      isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted, // Only enable for word grid when connected
   });
 
   // Update selected word when BLE input changes
@@ -146,7 +148,7 @@ export default function SentenceBuilder() {
         currHighlithedNav === "right"
       ) {
         // Toggle between bottom navigation buttons
-        setHighlightedNavButton(highlightedNavButton === 0 ? 1 : 0);
+        setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
         return;
       } else if (currHighlithedNav === "action") {
         // Perform navigation button action
@@ -306,7 +308,11 @@ export default function SentenceBuilder() {
         initialNumToRender={wordArray.length}
         maxToRenderPerBatch={wordArray.length}
         windowSize={21}
-        extraData={[selectedWord, isTopButtonHighlighted, isBottomButtonHighlighted]} // Ensure re-render when selection changes
+        extraData={[
+          selectedWord,
+          isTopButtonHighlighted,
+          isBottomButtonHighlighted,
+        ]} // Ensure re-render when selection changes
       />
       <View className="flex flex-row justify-around items-center p-1 gap-1 mt-2">
         <Pressable
@@ -315,7 +321,7 @@ export default function SentenceBuilder() {
             styles.navigationButton,
             { backgroundColor: "#89CDFF" },
             isBottomButtonHighlighted &&
-              highlightedNavButton === 0 &&
+              bottomHighlightedButton === 0 &&
               styles.selectedButton,
           ]}
         >
@@ -327,7 +333,7 @@ export default function SentenceBuilder() {
             styles.navigationButton,
             { backgroundColor: "#89CDFF" },
             isBottomButtonHighlighted &&
-              highlightedNavButton === 1 &&
+              bottomHighlightedButton === 1 &&
               styles.selectedButton,
           ]}
         >

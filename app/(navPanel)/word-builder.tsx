@@ -16,9 +16,12 @@ import {
 } from "react-native";
 
 export default function WordBuilder() {
+  const numCols = 12;
+  const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
+
   const [phrase, setPhrase] = useState("");
   const [selectedKey, setSelectedKey] = useState(0);
-  const [suggestions, setSuggestions] = useState(MOCK_WORDS);
+
   const [isTopButtonHighlighted, setIsTopButtonHighlighted] = useState(false);
   const [isSuggestionHighlighted, setIsSuggestionHighlighted] = useState(false);
   const [isBottomButtonHighlighted, setIsBottomButtonHighlighted] =
@@ -27,14 +30,13 @@ export default function WordBuilder() {
   const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] =
     useState(0);
   const [bottomHighlightedButton, setBottomHighlightedButton] = useState(0); // 0 for Clear, 1 for Done
+
   const { currHighlithedNav } = useAppContext();
   const { isConnected } = useBLE();
+  
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
-  const numCols = 12;
-
-  // Image size based on device size
   const imageSize = isSmallDevice ? 20 : isTablet ? 24 : 36;
 
   const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
@@ -52,7 +54,7 @@ export default function WordBuilder() {
   };
 
   const handleSuggestionAction = () => {
-    const selectedSuggestion = suggestions[highlightedSuggestionIndex];
+    const selectedSuggestion = suggestionsArray[highlightedSuggestionIndex];
     console.log(selectedSuggestion);
     // TODO: Send this to the sentence builder page and append to the sentance in the sentence builder page
   };
@@ -122,13 +124,13 @@ export default function WordBuilder() {
           break;
         case "left":
           setHighlightedSuggestionIndex((prev) => {
-            let newIdx = (prev - 1 + suggestions.length) % suggestions.length;
+            let newIdx = (prev - 1 + suggestionsArray.length) % suggestionsArray.length;
             return newIdx;
           });
           break;
         case "right":
           setHighlightedSuggestionIndex((prev) => {
-            let newIdx = (prev + 1) % suggestions.length;
+            let newIdx = (prev + 1) % suggestionsArray.length;
             return newIdx;
           });
           break;
@@ -246,7 +248,7 @@ export default function WordBuilder() {
         </View>
         <View className="flex-center my-2">
           <FlatList
-            data={suggestions}
+            data={suggestionsArray}
             horizontal
             renderItem={({ item, index }) => (
               <View
