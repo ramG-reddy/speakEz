@@ -22,8 +22,12 @@ export default function Presets() {
   const numCols = 3;
   const [presetArray, setPresetArray] = useState(PRESETS);
   const { width } = Dimensions.get("window");
-  const isSmallDevice = width < 1024;
+  const isSmallDevice = width < 768;
+  const isTablet = width >= 768 && width < 1024;
   const { isConnected } = useBLE();
+  // Add state for button highlighting
+  const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
+  const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Settings, 1 for Word Builder
 
   // Use the grid scroll hook
   const { handleItemLayout, safeScrollToPosition, getListProps } =
@@ -32,54 +36,93 @@ export default function Presets() {
       isSmallDevice,
     });
 
-  // Add word builder to presets array
-  useEffect(() => {
-    setPresetArray((prev) => {
-      const newPresets = [
-        ...prev,
-        {
-          id: "wordBuilder",
-          text: "WORD BUILDER →",
-        },
-      ];
-      return newPresets;
-    });
-  }, []);
-
   // Define the action handler to avoid code duplication
   const handlePresetAction = () => {
-    if (presetArray[selectedPreset]?.id === "wordBuilder") {
-      router.push("./word-builder");
-      return;
-    }
     const phrase = `${presetArray[selectedPreset]?.text || ""}`;
     console.log(phrase);
     speakText(phrase);
   };
 
-  // Use the BLE input hook to respond to hardware controls
+  // Define button action handler
+  const handleButtonAction = () => {
+    if (highlightedButton === 0) {
+      router.push("../(home)/settings");
+    } else {
+      router.push("./sentence-builder");
+    }
+  };
+
+  // Combined action handler for both presets and buttons
+  const handleCombinedAction = () => {
+    if (isButtonHighlighted) {
+      handleButtonAction();
+    } else {
+      handlePresetAction();
+    }
+  };
+
+  // Use the BLE input hook to respond to hardware controls for presets
   const { currentIndex } = useBLEInput({
     array: presetArray,
     index: selectedPreset,
     numCols,
-    onAction: handlePresetAction,
-    isEnabled: isConnected, // Only enable when connected
+    onAction: handleCombinedAction,
+    isEnabled: isConnected && !isButtonHighlighted, // Only enable when connected and not on buttons
   });
 
   // Update selected preset when BLE input changes
   useEffect(() => {
-    if (currentIndex >= 0 && currentIndex < presetArray.length) {
+    if (
+      !isButtonHighlighted &&
+      currentIndex >= 0 &&
+      currentIndex < presetArray.length
+    ) {
       setSelectedPreset(currentIndex);
     }
-  }, [currentIndex, presetArray.length]);
+  }, [currentIndex, presetArray.length, isButtonHighlighted]);
 
   // Auto-scroll to the selected preset
   useEffect(() => {
-    safeScrollToPosition(selectedPreset, presetArray.length);
-  }, [selectedPreset, presetArray.length]);
+    safeScrollToPosition(
+      selectedPreset,
+      presetArray.length,
+      isButtonHighlighted
+    );
+  }, [selectedPreset, isButtonHighlighted, presetArray.length]);
 
   // Handle tap event (manual input)
   const handleTap = () => {
+    // Handle button navigation when buttons are highlighted
+    if (isButtonHighlighted) {
+      if (currHighlithedNav === "up") {
+        // Move back to the preset grid
+        setIsButtonHighlighted(false);
+        return;
+      } else if (
+        currHighlithedNav === "left" ||
+        currHighlithedNav === "right"
+      ) {
+        // Toggle between buttons
+        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
+        return;
+      } else if (currHighlithedNav === "action") {
+        // Perform button action
+        handleButtonAction();
+        return;
+      }
+      return;
+    }
+
+    // Check if we're in the bottom row and going down
+    const isLastRow =
+      Math.floor(selectedPreset / numCols) ===
+      Math.floor((presetArray.length - 1) / numCols);
+    if (currHighlithedNav === "down" && isLastRow) {
+      setIsButtonHighlighted(true);
+      return;
+    }
+
+    // Regular preset grid navigation
     let nextPreset = handleInput({
       currHighlithedNav,
       array: presetArray,
@@ -104,10 +147,12 @@ export default function Presets() {
     <View
       style={[
         styles.presetCard,
-        selectedPreset === index && styles.selectedPreset,
-        item.id === "wordBuilder" && { backgroundColor: "#ADFF5B" },
+        selectedPreset === index &&
+          !isButtonHighlighted &&
+          styles.selectedPreset,
       ]}
       onLayout={index === 0 ? handleItemLayout : undefined}
+      className="flex-center"
     >
       <Text
         style={[styles.presetText, isSmallDevice && styles.smallPresetText]}
@@ -138,8 +183,40 @@ export default function Presets() {
         initialNumToRender={presetArray.length}
         maxToRenderPerBatch={presetArray.length}
         windowSize={21}
-        extraData={selectedPreset} // Ensure re-render when selection changes
+        extraData={[selectedPreset, isButtonHighlighted]} // Ensure re-render when selection changes
       />
+      <View className="flex flex-row justify-around items-center p-1 gap-1 mt-2">
+        <Pressable
+          onPress={() => {
+            router.push("../(home)/settings");
+          }}
+          style={[
+            styles.navigationButton,
+            { backgroundColor: "#89CDFF" },
+            isButtonHighlighted &&
+              highlightedButton === 0 &&
+              styles.selectedButton,
+          ]}
+          className="rounded-[64px] px-3"
+        >
+          <Text className="text-center text-lg">Settings</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            router.push("./sentence-builder");
+          }}
+          style={[
+            styles.navigationButton,
+            { backgroundColor: "#89CDFF" },
+            isButtonHighlighted &&
+              highlightedButton === 1 &&
+              styles.selectedButton,
+          ]}
+          className="rounded-[64px] px-3"
+        >
+          <Text className="text-center text-lg">Sentence Builder</Text>
+        </Pressable>
+      </View>
     </Pressable>
   );
 }
@@ -165,5 +242,12 @@ const styles = StyleSheet.create({
   },
   presetGrid: {
     gap: 12,
+  },
+  navigationButton: {
+    paddingHorizontal: 16,
+    borderRadius: 64,
+  },
+  selectedButton: {
+    backgroundColor: "#ADFF5B",
   },
 });

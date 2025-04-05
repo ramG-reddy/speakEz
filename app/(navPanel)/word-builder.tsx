@@ -1,8 +1,7 @@
-import { MOCK_DATA } from "@/lib/constants/Data";
+import { MOCK_WORDS } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
 import { useBLEInput } from "@/lib/hooks/useBLEInput";
-import { useGridScroll } from "@/lib/hooks/useGridScroll";
 import { handleInput } from "@/lib/utils/handleInput";
 import { speakText } from "@/lib/utils/speakText";
 import { useEffect, useState } from "react";
@@ -17,159 +16,172 @@ import {
 } from "react-native";
 
 export default function WordBuilder() {
-  const [selectedWord, setSelectedWord] = useState(0);
-  const [sentence, setSentence] = useState("");
+  const [phrase, setPhrase] = useState("");
+  const [selectedKey, setSelectedKey] = useState(0);
+  const [suggestions, setSuggestions] = useState(MOCK_WORDS);
+  const [isTopButtonHighlighted, setIsTopButtonHighlighted] = useState(false);
+  const [isSuggestionHighlighted, setIsSuggestionHighlighted] = useState(false);
+  const [isBottomButtonHighlighted, setIsBottomButtonHighlighted] =
+    useState(false);
+  const [topHighlightedButton, setTopHighlightedButton] = useState(0); // 0 for Clear, 1 for Done
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] =
+    useState(0);
+  const [bottomHighlightedButton, setBottomHighlightedButton] = useState(0); // 0 for Clear, 1 for Done
   const { currHighlithedNav } = useAppContext();
-  const numCols = 3;
-  const [wordArray, setWordArray] = useState(MOCK_DATA);
-  const [isButtonHighlighted, setIsButtonHighlighted] = useState(false);
-  const [highlightedButton, setHighlightedButton] = useState(0); // 0 for Clear, 1 for Speak
   const { isConnected } = useBLE();
   const { width } = Dimensions.get("window");
-  const isSmallDevice = width < 1024;
+  const isSmallDevice = width < 768;
+  const isTablet = width >= 768 && width < 1024;
+  const numCols = 12;
 
   // Image size based on device size
-  const imageSize = isSmallDevice ? 20 : 36;
+  const imageSize = isSmallDevice ? 20 : isTablet ? 24 : 36;
 
-  // Use the grid scroll hook
-  const { handleItemLayout, safeScrollToPosition, getListProps } =
-    useGridScroll({
-      numCols,
-      isSmallDevice,
-    });
+  const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
 
-  // Helper function for adding words to sentence
-  const addWordToSentence = (word: string) => {
-    setSentence((prev) => {
-      if (prev === "") {
-        return word;
-      }
-      return `${prev} ${word}`;
-    });
+  const handleKeyPress = (key: string) => {
+    setPhrase((prev) => prev + key);
   };
 
-  // Define action handlers to avoid code duplication
-  const handleWordAction = () => {
-    if (!isButtonHighlighted) {
-      if (selectedWord >= 0 && selectedWord < wordArray.length) {
-        const word = wordArray[selectedWord].data;
-        addWordToSentence(word);
-      }
-    }
-  };
-
-  const handleButtonAction = () => {
-    if (highlightedButton === 0) {
-      setSentence(""); // Clear action
+  const handleTopButtonAction = () => {
+    if (topHighlightedButton === 0) {
+      setPhrase(""); // Clear action
     } else {
-      console.log(sentence);
-      speakText(sentence);
+      speakText(phrase); // Done action
     }
   };
 
-  // Combined action handler for both words and buttons
+  const handleSuggestionAction = () => {
+    const selectedSuggestion = suggestions[highlightedSuggestionIndex];
+    console.log(selectedSuggestion);
+    // TODO: Send this to the sentence builder page and append to the sentance in the sentence builder page
+  };
+
+  const handleBottomButtonAction = () => {
+    if (bottomHighlightedButton === 0) {
+      setPhrase((prev) => prev + " "); // Space action
+    } else {
+      setPhrase((prev) => prev.slice(0, -1)); // Backspace action
+    }
+  };
+
   const handleCombinedAction = () => {
-    if (isButtonHighlighted) {
-      handleButtonAction();
+    if (isTopButtonHighlighted) {
+      handleTopButtonAction();
+    } else if (isSuggestionHighlighted) {
+      handleSuggestionAction();
+    } else if (isBottomButtonHighlighted) {
+      handleBottomButtonAction();
     } else {
-      handleWordAction();
+      handleKeyPress(keyboard[selectedKey]);
     }
   };
 
-  // Use the BLE input hook
   const { currentIndex } = useBLEInput({
-    array: wordArray,
-    index: selectedWord,
+    array: keyboard,
+    index: selectedKey,
     numCols,
     onAction: handleCombinedAction,
-    isEnabled: isConnected && !isButtonHighlighted, // Only enable for word grid when connected
+    isEnabled:
+      isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted,
   });
 
-  // Update selected word when BLE input changes
   useEffect(() => {
-    if (
-      !isButtonHighlighted &&
-      currentIndex >= 0 &&
-      currentIndex < wordArray.length
-    ) {
-      setSelectedWord(currentIndex);
+    if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
+      setSelectedKey(currentIndex);
     }
-  }, [currentIndex, wordArray.length, isButtonHighlighted]);
+  }, [currentIndex]);
 
-  // Auto-scroll to the selected word
-  useEffect(() => {
-    safeScrollToPosition(selectedWord, wordArray.length, isButtonHighlighted);
-  }, [selectedWord, isButtonHighlighted, wordArray.length]);
-
-  // Handle tap event (manual input)
   const handleTap = () => {
-    // Handle button navigation when buttons are highlighted
-    if (isButtonHighlighted) {
+    if (isTopButtonHighlighted) {
       if (currHighlithedNav === "down") {
-        // Move back to the word grid
-        setIsButtonHighlighted(false);
-        return;
+        // Move back to the keyboard grid
+        setIsTopButtonHighlighted(false);
+        setIsSuggestionHighlighted(true);
       } else if (
         currHighlithedNav === "left" ||
         currHighlithedNav === "right"
       ) {
-        // Toggle between buttons
-        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
-        return;
+        // Toggle between top buttons
+        setTopHighlightedButton(topHighlightedButton === 0 ? 1 : 0);
       } else if (currHighlithedNav === "action") {
-        // Perform button action
-        handleButtonAction();
-        return;
+        // Perform top button action
+        handleTopButtonAction();
       }
       return;
     }
 
-    // Check if we're in the top row and going up
-    if (currHighlithedNav === "up" && selectedWord < numCols) {
-      setIsButtonHighlighted(true);
+    if (isSuggestionHighlighted) {
+      switch (currHighlithedNav) {
+        case "up":
+          setIsSuggestionHighlighted(false);
+          setIsTopButtonHighlighted(true);
+          break;
+        case "down":
+          setIsSuggestionHighlighted(false);
+          break;
+        case "left":
+          setHighlightedSuggestionIndex((prev) => {
+            let newIdx = (prev - 1 + suggestions.length) % suggestions.length;
+            return newIdx;
+          });
+          break;
+        case "right":
+          setHighlightedSuggestionIndex((prev) => {
+            let newIdx = (prev + 1) % suggestions.length;
+            return newIdx;
+          });
+          break;
+        case "action":
+          handleSuggestionAction();
+          break;
+        default:
+          break;
+      }
       return;
     }
 
-    // Regular word grid navigation
-    let nextWord = handleInput({
-      currHighlithedNav,
-      array: wordArray,
-      index: selectedWord,
-      numCols,
-      onAction: handleWordAction,
-    });
+    if (isBottomButtonHighlighted) {
+      if (currHighlithedNav === "up") {
+        // Move back to the keyboard grid
+        setIsBottomButtonHighlighted(false);
+      } else if (
+        currHighlithedNav === "left" ||
+        currHighlithedNav === "right"
+      ) {
+        // Toggle between bottom buttons
+        setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
+      } else if (currHighlithedNav === "action") {
+        // Perform bottom button action
+        handleBottomButtonAction();
+      }
+      return;
+    }
 
-    // Ensure we have a valid index
-    if (nextWord >= 0 && nextWord < wordArray.length) {
-      setSelectedWord(nextWord);
+    const isLastRow =
+      Math.floor(selectedKey / numCols) ===
+      Math.floor((keyboard.length - 1) / numCols);
+
+    const isFirstRow = Math.floor(selectedKey / numCols) === 0;
+
+    if (currHighlithedNav === "up" && isFirstRow) {
+      setIsSuggestionHighlighted(true);
+    } else if (currHighlithedNav === "down" && isLastRow) {
+      setIsBottomButtonHighlighted(true);
+    } else {
+      const nextKey = handleInput({
+        currHighlithedNav,
+        array: keyboard,
+        index: selectedKey,
+        numCols,
+        onAction: handleCombinedAction,
+      });
+      setSelectedKey(nextKey);
     }
   };
 
-  const WordItem = ({
-    item,
-    index,
-  }: {
-    item: (typeof wordArray)[0];
-    index: number;
-  }) => (
-    <View
-      style={[
-        styles.wordCard,
-        selectedWord === index && !isButtonHighlighted && styles.selectedWord,
-      ]}
-      onLayout={index === 0 ? handleItemLayout : undefined}
-    >
-      <Text style={[styles.wordText, isSmallDevice && styles.smallDeviceText]}>
-        {item.data}
-      </Text>
-    </View>
-  );
-
   return (
-    <Pressable
-      onPress={() => handleTap()}
-      className="flex-1 p-2 md:p-4 bg-[#72919E]"
-    >
+    <Pressable onPress={handleTap} className="flex-1 p-2 md:p-4 bg-[#72919E]">
       <Text
         className={`${
           isSmallDevice ? "text-2xl" : "text-4xl"
@@ -177,72 +189,129 @@ export default function WordBuilder() {
       >
         Word Builder
       </Text>
-
-      <View style={styles.textArea} className="m-1 p-1">
-        <View style={styles.inputContainer}>
-          <Text
-            style={[
-              styles.displayText,
-              isSmallDevice && styles.smallDeviceText,
-            ]}
-          >
-            {sentence}
-          </Text>
-        </View>
-        <View className="flex flex-row justify-between items-center p-1 gap-1">
-          <View>
-            <Pressable
-              onPress={() => setSentence("")}
+      <View className="flex-1 flex-col">
+        <View style={styles.textArea} className="m-1 p-1 flex-row">
+          <View style={styles.inputContainer}>
+            <Text
               style={[
-                styles.textAreaBtn,
-                { backgroundColor: "#f00" },
-                isButtonHighlighted &&
-                  highlightedButton === 0 &&
-                  styles.selectedButton,
+                styles.displayText,
+                isSmallDevice && styles.smallDeviceText,
               ]}
             >
-              <Image
-                source={require("@/assets/images/close.png")}
-                style={{ width: imageSize, height: imageSize }}
-              />
-            </Pressable>
+              {phrase}
+            </Text>
           </View>
-          <View>
-            <Pressable
-              onPress={() => {
-                speakText(sentence);
-              }}
-              style={[
-                styles.textAreaBtn,
-                { backgroundColor: "#73C4FF" },
-                isButtonHighlighted &&
-                  highlightedButton === 1 &&
-                  styles.selectedButton,
-              ]}
-            >
-              <Image
-                source={require("@/assets/images/arrow.png")}
-                style={{
-                  width: imageSize,
-                  height: imageSize,
-                  transform: [{ rotate: "90deg" }],
+          <View className="flex flex-row items-center p-1 gap-1">
+            <View>
+              <Pressable
+                onPress={() => setPhrase("")}
+                style={[
+                  styles.textAreaBtn,
+                  { backgroundColor: "#f00" },
+                  isTopButtonHighlighted &&
+                    topHighlightedButton === 0 &&
+                    styles.selectedButton,
+                ]}
+              >
+                <Image
+                  source={require("@/assets/images/close.png")}
+                  style={{ width: imageSize, height: imageSize }}
+                />
+              </Pressable>
+            </View>
+            <View>
+              <Pressable
+                onPress={() => {
+                  speakText(phrase);
                 }}
-              />
-            </Pressable>
+                style={[
+                  styles.textAreaBtn,
+                  { backgroundColor: "#73C4FF" },
+                  isTopButtonHighlighted &&
+                    topHighlightedButton === 1 &&
+                    styles.selectedButton,
+                ]}
+              >
+                <Image
+                  source={require("@/assets/images/arrow.png")}
+                  style={{
+                    width: imageSize,
+                    height: imageSize,
+                    transform: [{ rotate: "90deg" }],
+                  }}
+                />
+              </Pressable>
+            </View>
           </View>
+        </View>
+        <View className="flex-center my-2">
+          <FlatList
+            data={suggestions}
+            horizontal
+            renderItem={({ item, index }) => (
+              <View
+                style={[
+                  styles.suggestion,
+                  isSuggestionHighlighted &&
+                    highlightedSuggestionIndex === index &&
+                    styles.selectedKey,
+                ]}
+              >
+                <Text style={styles.suggestionText}>{item.data}</Text>
+              </View>
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            style={styles.suggestionList}
+          />
+        </View>
+        <View className="border-4 border-white rounded-lg p-1">
+          <FlatList
+            data={keyboard}
+            numColumns={numCols}
+            renderItem={({ item, index }) => (
+              <View
+                style={[
+                  styles.key,
+                  selectedKey === index &&
+                    !isTopButtonHighlighted &&
+                    !isSuggestionHighlighted &&
+                    !isBottomButtonHighlighted &&
+                    styles.selectedKey,
+                ]}
+              >
+                <Text style={styles.keyText}>{item}</Text>
+              </View>
+            )}
+            keyExtractor={(item, index) => index.toString()}
+            style={styles.keyboard}
+            className="my-auto"
+          />
         </View>
       </View>
-      <FlatList
-        {...getListProps()}
-        data={wordArray}
-        renderItem={WordItem}
-        numColumns={numCols}
-        keyExtractor={(item) => item.id}
-        initialNumToRender={wordArray.length}
-        maxToRenderPerBatch={wordArray.length}
-        windowSize={21}
-        extraData={selectedWord} // Ensure re-render when selection changes
-      />
+      <View className="flex flex-row justify-around items-center mt-2">
+        <Pressable
+          onPress={() => setPhrase((prev) => prev + " ")}
+          style={[
+            styles.bottomButton,
+            isBottomButtonHighlighted &&
+              bottomHighlightedButton === 0 &&
+              styles.selectedButton,
+          ]}
+        >
+          <Text className="text-center text-lg">Space</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setPhrase((prev) => prev.slice(0, -1))}
+          style={[
+            styles.bottomButton,
+            isBottomButtonHighlighted &&
+              bottomHighlightedButton === 1 &&
+              styles.selectedButton,
+          ]}
+        >
+          <Text className="text-center text-lg">Backspace</Text>
+        </Pressable>
+      </View>
     </Pressable>
   );
 }
@@ -251,24 +320,8 @@ const styles = StyleSheet.create({
   textArea: {
     borderRadius: 8,
     backgroundColor: "#fff",
-    flexDirection: "row",
-  },
-  textAreaBtn: {
-    color: "#fff",
-    borderRadius: 8,
     padding: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 16,
-  },
-  smallButtonText: {
-    fontSize: 12,
-  },
-  inputContainer: {
-    flex: 1,
-    padding: 4,
+    marginBottom: 8,
   },
   displayText: {
     fontSize: 16,
@@ -277,33 +330,57 @@ const styles = StyleSheet.create({
   smallDeviceText: {
     fontSize: 14,
   },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    textAlignVertical: "top",
-    minHeight: 40,
+  textAreaBtn: {
+    padding: 8,
+    borderRadius: 8,
   },
-  wordCard: {
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  selectedButton: {
+    backgroundColor: "#ADFF5B",
+  },
+  suggestionList: {
+    marginBottom: 8,
+  },
+  suggestion: {
+    backgroundColor: "#FBFEFF",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginHorizontal: 4,
+  },
+  suggestionText: {
+    fontSize: 16,
+    color: "#000",
+  },
+  keyboard: {
+    marginBottom: 8,
+  },
+  inputContainer: {
+    flex: 1,
+    padding: 4,
+  },
+  key: {
     flex: 1,
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 12,
-    margin: 4,
+    padding: 4,
+    margin: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  selectedWord: {
+  selectedKey: {
     backgroundColor: "#ADFF5B",
   },
-  wordText: {
-    color: "#000",
+  keyText: {
     fontSize: 16,
-    textAlign: "center",
+    color: "#000",
   },
-  wordGrid: {
-    gap: 12,
-  },
-  selectedButton: {
-    // borderColor: "#000",
-    // borderWidth: 3,
-    backgroundColor: "#ADFF5B",
+  bottomButton: {
+    backgroundColor: "#89CDFF",
+    paddingHorizontal: 16,
+    borderRadius: 64,
   },
 });
