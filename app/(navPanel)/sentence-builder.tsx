@@ -98,7 +98,7 @@ export default function SentenceBuilder() {
   };
 
   // Use the BLE input hook
-  const { currentIndex } = useBLEInput({
+  const { newIndex } = useBLEInput({
     array: wordArray,
     index: selectedWord,
     numCols,
@@ -112,13 +112,13 @@ export default function SentenceBuilder() {
     if (
       !isTopButtonHighlighted &&
       !isBottomButtonHighlighted &&
-      currentIndex >= 0 &&
-      currentIndex < wordArray.length
+      newIndex >= 0 &&
+      newIndex < wordArray.length
     ) {
-      setSelectedWord(currentIndex);
+      setSelectedWord(newIndex);
     }
   }, [
-    currentIndex,
+    newIndex,
     wordArray.length,
     isTopButtonHighlighted,
     isBottomButtonHighlighted,

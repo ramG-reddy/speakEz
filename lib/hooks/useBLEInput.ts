@@ -18,7 +18,7 @@ export const useBLEInput = ({
   onAction,
   isEnabled = true,
 }: UseBLEInputProps) => {
-  const [currentIndex, setCurrentIndex] = useState(index);
+  const [newIndex, setNewIndex] = useState(index);
   const { lastAction } = useBLE();
 
   useEffect(() => {
@@ -30,14 +30,14 @@ export const useBLEInput = ({
       const nextIndex = handleInput({
         currHighlithedNav: lastAction,
         array,
-        index: currentIndex,
+        index: newIndex,
         numCols,
         onAction,
       });
 
-      setCurrentIndex(nextIndex);
+      setNewIndex(nextIndex);
     }
   }, [lastAction, isEnabled]);
 
-  return { currentIndex };
+  return { newIndex };
 };

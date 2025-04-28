@@ -65,7 +65,7 @@ export default function Presets() {
   };
 
   // Use the BLE input hook to respond to hardware controls for presets
-  const { currentIndex } = useBLEInput({
+  const { newIndex } = useBLEInput({
     array: presetArray,
     index: selectedPreset,
     numCols,
@@ -77,12 +77,12 @@ export default function Presets() {
   useEffect(() => {
     if (
       !isButtonHighlighted &&
-      currentIndex >= 0 &&
-      currentIndex < presetArray.length
+      newIndex >= 0 &&
+      newIndex < presetArray.length
     ) {
-      setSelectedPreset(currentIndex);
+      setSelectedPreset(newIndex);
     }
-  }, [currentIndex, presetArray.length, isButtonHighlighted]);
+  }, [newIndex, presetArray.length, isButtonHighlighted]);
 
   // Auto-scroll to the selected preset
   useEffect(() => {

@@ -1,7 +1,4 @@
-import {
-  CHARACTERISTIC_UUID,
-  SERVICE_UUID
-} from "@/lib/constants/Config";
+import { CHARACTERISTIC_UUID, SERVICE_UUID } from "@/lib/Config";
 import { NavAction } from "@/lib/types";
 import { Platform } from "react-native";
 import {
@@ -171,9 +168,7 @@ export class BLEService {
   }
 
   // Parse the data received from ESP32
-  private parseCharacteristicData(
-    characteristic: Characteristic
-  ): NavAction {
+  private parseCharacteristicData(characteristic: Characteristic): NavAction {
     try {
       // Decode base64 data
       const base64Value = characteristic.value;

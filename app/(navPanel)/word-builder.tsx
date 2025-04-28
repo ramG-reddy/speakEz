@@ -88,7 +88,7 @@ export default function WordBuilder() {
     }
   };
 
-  const { currentIndex } = useBLEInput({
+  const { newIndex } = useBLEInput({
     array: keyboard,
     index: selectedKey,
     numCols,
@@ -99,9 +99,9 @@ export default function WordBuilder() {
 
   useEffect(() => {
     if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
-      setSelectedKey(currentIndex);
+      setSelectedKey(newIndex);
     }
-  }, [currentIndex]);
+  }, [newIndex]);
 
   const handleTap = () => {
     if (isTopButtonHighlighted) {
