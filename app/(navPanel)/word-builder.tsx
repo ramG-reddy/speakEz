@@ -15,10 +15,11 @@ import {
   Text,
   View,
 } from "react-native";
+import { usePathname } from "expo-router";
 
 export default function WordBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
-  const { isConnected } = useBLE();
+  const { isConnected, lastAction, setLastAction } = useBLE();
   const numCols = 12;
   const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
 
@@ -39,6 +40,9 @@ export default function WordBuilder() {
   const isTablet = width >= 768 && width < 1024;
   const imageSize = isSmallDevice ? 20 : isTablet ? 24 : 36;
 
+  const pathname = usePathname();
+  const isWordBuilderPage = pathname === "/word-builder";
+
   const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
 
   const handleKeyPress = (key: string) => {
@@ -56,15 +60,17 @@ export default function WordBuilder() {
     } else {
       addToSentence(phrase); // Done action
       setPhrase(""); // Clear the phrase after sending it to the sentence builder page
+      setLastAction("none"); // Reset last action to avoid conflicts
       router.push("./sentence-builder"); // Navigate to the sentence builder page
     }
   };
 
   const handleSuggestionAction = () => {
     const selectedSuggestion = suggestionsArray[highlightedSuggestionIndex];
-    console.log(selectedSuggestion);
+    console.log("handleSuggestion Word Page:",selectedSuggestion);
     addToSentence(selectedSuggestion.data); // Add the selected suggestion to the sentence
     setPhrase("");
+    setLastAction("none"); // Reset last action to avoid conflicts
     router.push("./sentence-builder"); // Navigate to the sentence builder page
   };
 
@@ -88,20 +94,20 @@ export default function WordBuilder() {
     }
   };
 
-  const { newIndex } = useBLEInput({
-    array: keyboard,
-    index: selectedKey,
-    numCols,
-    onAction: handleCombinedAction,
-    isEnabled:
-      isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted,
-  });
+  // const { newIndex } = useBLEInput({
+  //   array: keyboard,
+  //   index: selectedKey,
+  //   numCols,
+  //   onAction: handleCombinedAction,
+  //   isEnabled:
+  //     isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted,
+  // });
 
-  useEffect(() => {
-    if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
-      setSelectedKey(newIndex);
-    }
-  }, [newIndex]);
+  // useEffect(() => {
+  //   if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
+  //     setSelectedKey(newIndex);
+  //   }
+  // }, [newIndex]);
 
   const handleTap = () => {
     if (isTopButtonHighlighted) {
@@ -190,6 +196,97 @@ export default function WordBuilder() {
       setSelectedKey(nextKey);
     }
   };
+
+  useEffect(() => {
+    if(!isWordBuilderPage || lastAction === "none") return;
+    console.log("Last Action (Word):", lastAction);
+    if (isTopButtonHighlighted) {
+      if (lastAction === "down") {
+        // Move back to the keyboard grid
+        setIsTopButtonHighlighted(false);
+        setIsSuggestionHighlighted(true);
+      } else if (
+        lastAction === "left" ||
+        lastAction === "right"
+      ) {
+        // Toggle between top buttons
+        setTopHighlightedButton(topHighlightedButton === 0 ? 1 : 0);
+      } else if (lastAction === "action") {
+        // Perform top button action
+        handleTopButtonAction();
+      }
+      return;
+    }
+
+    if (isSuggestionHighlighted) {
+      switch (lastAction) {
+        case "up":
+          setIsSuggestionHighlighted(false);
+          setIsTopButtonHighlighted(true);
+          break;
+        case "down":
+          setIsSuggestionHighlighted(false);
+          break;
+        case "left":
+          setHighlightedSuggestionIndex((prev) => {
+            let newIdx =
+              (prev - 1 + suggestionsArray.length) % suggestionsArray.length;
+            return newIdx;
+          });
+          break;
+        case "right":
+          setHighlightedSuggestionIndex((prev) => {
+            let newIdx = (prev + 1) % suggestionsArray.length;
+            return newIdx;
+          });
+          break;
+        case "action":
+          handleSuggestionAction();
+          break;
+        default:
+          break;
+      }
+      return;
+    }
+
+    if (isBottomButtonHighlighted) {
+      if (lastAction === "up") {
+        // Move back to the keyboard grid
+        setIsBottomButtonHighlighted(false);
+      } else if (
+        lastAction === "left" ||
+        lastAction === "right"
+      ) {
+        // Toggle between bottom buttons
+        setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
+      } else if (lastAction === "action") {
+        // Perform bottom button action
+        handleBottomButtonAction();
+      }
+      return;
+    }
+
+    const isLastRow =
+      Math.floor(selectedKey / numCols) ===
+      Math.floor((keyboard.length - 1) / numCols);
+
+    const isFirstRow = Math.floor(selectedKey / numCols) === 0;
+
+    if (lastAction === "up" && isFirstRow) {
+      setIsSuggestionHighlighted(true);
+    } else if (lastAction === "down" && isLastRow) {
+      setIsBottomButtonHighlighted(true);
+    } else {
+      const nextKey = handleInput({
+        currHighlithedNav: lastAction,
+        array: keyboard,
+        index: selectedKey,
+        numCols,
+        onAction: handleCombinedAction,
+      });
+      setSelectedKey(nextKey);
+    }
+  }, [lastAction]);
 
   return (
     <Pressable onPress={handleTap} className="flex-1 p-2 md:p-4 bg-[#72919E]">

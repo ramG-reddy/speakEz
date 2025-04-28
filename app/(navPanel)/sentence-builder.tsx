@@ -16,10 +16,11 @@ import {
   Text,
   View,
 } from "react-native";
+import { usePathname } from "expo-router";
 
 export default function SentenceBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
-  const { isConnected } = useBLE();
+  const { isConnected, lastAction, setLastAction } = useBLE();
   const numCols = 3;
   const [wordArray, setWordArray] = useState(MOCK_DATA);
 
@@ -36,6 +37,9 @@ export default function SentenceBuilder() {
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
   const imageSize = isSmallDevice ? 20 : 36;
+
+  const pathname = usePathname();
+  const isSentencePage = pathname === "/sentence-builder";
 
   useEffect(() => {
     setTextAreaValue(sentence);
@@ -72,13 +76,14 @@ export default function SentenceBuilder() {
     if (highlightedButton === 0) {
       setSentence(""); // Clear action
     } else {
-      console.log(sentence);
+      console.log("Sentence page:",sentence);
       speakText(sentence);
     }
   };
 
   // Handle navigation button actions
   const handleNavButtonAction = () => {
+    setLastAction("none"); // Reset last action to avoid conflicts
     if (bottomHighlightedButton === 0) {
       router.push("./presets");
     } else {
@@ -97,32 +102,32 @@ export default function SentenceBuilder() {
     }
   };
 
-  // Use the BLE input hook
-  const { newIndex } = useBLEInput({
-    array: wordArray,
-    index: selectedWord,
-    numCols,
-    onAction: handleCombinedAction,
-    isEnabled:
-      isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted, // Only enable for word grid when connected
-  });
+  // // Use the BLE input hook
+  // const { newIndex } = useBLEInput({
+  //   array: wordArray,
+  //   index: selectedWord,
+  //   numCols,
+  //   onAction: handleCombinedAction,
+  //   isEnabled:
+  //     isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted, // Only enable for word grid when connected
+  // });
 
-  // Update selected word when BLE input changes
-  useEffect(() => {
-    if (
-      !isTopButtonHighlighted &&
-      !isBottomButtonHighlighted &&
-      newIndex >= 0 &&
-      newIndex < wordArray.length
-    ) {
-      setSelectedWord(newIndex);
-    }
-  }, [
-    newIndex,
-    wordArray.length,
-    isTopButtonHighlighted,
-    isBottomButtonHighlighted,
-  ]);
+  // // Update selected word when BLE input changes
+  // useEffect(() => {
+  //   if (
+  //     !isTopButtonHighlighted &&
+  //     !isBottomButtonHighlighted &&
+  //     newIndex >= 0 &&
+  //     newIndex < wordArray.length
+  //   ) {
+  //     setSelectedWord(newIndex);
+  //   }
+  // }, [
+  //   newIndex,
+  //   wordArray.length,
+  //   isTopButtonHighlighted,
+  //   isBottomButtonHighlighted,
+  // ]);
 
   // Auto-scroll to the selected word
   useEffect(() => {
@@ -211,6 +216,81 @@ export default function SentenceBuilder() {
       setSelectedWord(nextWord);
     }
   };
+
+  useEffect(() => {
+    if (!isSentencePage || lastAction === "none") return;
+    console.log("Last Action (Sentence):", lastAction);
+    // Handle navigation button highlighting (at the bottom of the screen)
+    if (isBottomButtonHighlighted) {
+      if (lastAction === "up") {
+        // Move back to the word grid
+        setIsBottomButtonHighlighted(false);
+        return;
+      } else if (
+        lastAction === "left" ||
+        lastAction === "right"
+      ) {
+        // Toggle between bottom navigation buttons
+        setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
+        return;
+      } else if (lastAction === "action") {
+        // Perform navigation button action
+        handleNavButtonAction();
+        return;
+      }
+      return;
+    }
+
+    // Handle top button navigation (Clear and Speak buttons)
+    if (isTopButtonHighlighted) {
+      if (lastAction === "down") {
+        // Move back to the word grid
+        setIsTopButtonHighlighted(false);
+        return;
+      } else if (
+        lastAction === "left" ||
+        lastAction === "right"
+      ) {
+        // Toggle between top buttons
+        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
+        return;
+      } else if (lastAction === "action") {
+        // Perform button action
+        handleButtonAction();
+        return;
+      }
+      return;
+    }
+
+    // Check if we're in the top row and going up
+    if (lastAction === "up" && selectedWord < numCols) {
+      setIsTopButtonHighlighted(true);
+      return;
+    }
+
+    // Check if we're in the bottom row and going down
+    const isLastRow =
+      Math.floor(selectedWord / numCols) ===
+      Math.floor((wordArray.length - 1) / numCols);
+    if (lastAction === "down" && isLastRow) {
+      setIsBottomButtonHighlighted(true);
+      return;
+    }
+
+    // Regular word grid navigation
+    let nextWord = handleInput({
+      currHighlithedNav: lastAction,
+      array: wordArray,
+      index: selectedWord,
+      numCols,
+      onAction: handleWordAction,
+    });
+
+    // Ensure we have a valid index
+    if (nextWord >= 0 && nextWord < wordArray.length) {
+      setSelectedWord(nextWord);
+    }
+  }, [lastAction]);
 
   const WordItem = ({
     item,

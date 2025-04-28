@@ -26,6 +26,9 @@ export const speakText = (sentence: string) => {
     // Native platform implementation
     Tts.setDefaultRate(0.4);
     Tts.setDefaultPitch(1.0);
+    Tts.setDucking(true); // Enable ducking to lower volume of other sounds
+    Tts.setDefaultVoice("en-US"); // Set default voice to US English
+    Tts.setIgnoreSilentSwitch("ignore"); // Ignore silent switch for iOS
     Tts.speak(sentence.trim());
   }
 };

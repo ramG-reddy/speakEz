@@ -122,7 +122,7 @@ export class BLEService {
       await connectedDevice.discoverAllServicesAndCharacteristics();
 
       const services = await connectedDevice.services();
-      console.log("Discovered services:", services);
+      // console.log("Discovered services:", services);
 
       const service = services.find((s) => s.uuid === SERVICE_UUID);
       if (!service) {
@@ -175,7 +175,7 @@ export class BLEService {
       if (!base64Value) return "none";
 
       const decodedValue = atob(base64Value);
-      console.log("Received BLE data:", decodedValue);
+      // console.log("Received BLE data:", decodedValue);
 
       try {
         const action = handleDecodedValue(decodedValue);

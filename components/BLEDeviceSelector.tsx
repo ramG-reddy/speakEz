@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useBLE } from "@/lib/context/BLEContext";
 import { Device } from "react-native-ble-plx";
+import { router } from "expo-router";
 
 type BLEDeviceSelectorProps = {
   visible: boolean;
@@ -26,6 +27,7 @@ export default function BLEDeviceSelector({
   const handleDeviceSelect = (device: Device) => {
     connectToDevice(device);
     onClose();
+    router.push("../(navPanel)/presets");
   };
 
   // Render a device item with ESP-32 highlighting

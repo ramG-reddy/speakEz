@@ -18,6 +18,7 @@ export type PermissionStatus =
 type BLEContextType = {
   isConnected: boolean;
   lastAction: NavAction;
+  setLastAction: (action: NavAction) => void;
   startScan: () => void;
   stopScan: () => void;
   discoveredDevices: Device[];
@@ -32,6 +33,7 @@ type BLEContextType = {
 const BLEContext = createContext<BLEContextType>({
   isConnected: false,
   lastAction: "none",
+  setLastAction: () => {},
   startScan: () => {},
   stopScan: () => {},
   discoveredDevices: [],
@@ -124,7 +126,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     // Set up action listener
     
     const actionListener = (action: NavAction) => {
-      console.log("Received action:", action);
+      // console.log("Received action:", action);
       setLastAction(action);
     };
     bleService.addListener(actionListener);
@@ -323,6 +325,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   const contextValue: BLEContextType = {
     isConnected,
     lastAction,
+    setLastAction,
     startScan,
     stopScan,
     discoveredDevices,
