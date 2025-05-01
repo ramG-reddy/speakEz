@@ -1,21 +1,20 @@
+import { PRESETS } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
-import { PRESETS } from "@/lib/constants/Data";
-import { handleInput } from "@/lib/utils/handleInput";
 import { useGridScroll } from "@/lib/hooks/useGridScroll";
-import { useBLEInput } from "@/lib/hooks/useBLEInput";
+import { NavAction } from "@/lib/types";
+import { handleInput } from "@/lib/utils/handleInput";
+import { speakText } from "@/lib/utils/speakText";
+import { router, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Dimensions,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   View,
-  Dimensions,
 } from "react-native";
-import { router } from "expo-router";
-import { speakText } from "@/lib/utils/speakText";
-import { usePathname } from "expo-router";
 
 export default function Presets() {
   const { currHighlithedNav } = useAppContext();
@@ -43,6 +42,15 @@ export default function Presets() {
       isSmallDevice,
     });
 
+  // Auto-scroll to the selected preset
+  useEffect(() => {
+    safeScrollToPosition(
+      selectedPreset,
+      presetArray.length,
+      isButtonHighlighted
+    );
+  }, [selectedPreset, isButtonHighlighted, presetArray.length]);
+
   // Define the action handler to avoid code duplication
   const handlePresetAction = () => {
     const phrase = `${presetArray[selectedPreset]?.text || ""}`;
@@ -60,137 +68,63 @@ export default function Presets() {
     }
   };
 
-  // Combined action handler for both presets and buttons
-  const handleCombinedAction = () => {
+  const handlePreset = (actionType: NavAction) => {
+    if(actionType === "none") return; // Ignore if no action
+
+    // Handle button navigation when buttons are highlighted
     if (isButtonHighlighted) {
-      handleButtonAction();
-    } else {
-      handlePresetAction();
+      if (actionType === "up") {
+        // Move back to the preset grid
+        setIsButtonHighlighted(false);
+      } else if (actionType === "left" || actionType === "right") {
+        // Toggle between buttons
+        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
+      } else if (actionType === "action") {
+        // Perform button action
+        handleButtonAction();
+      }
+      return;
+    }
+
+    // Check if we're in the bottom row and going down
+    const isLastRow =
+      Math.floor(selectedPreset / numCols) ===
+      Math.floor((presetArray.length - 1) / numCols);
+
+    if (actionType === "down" && isLastRow) {
+      setIsButtonHighlighted(true);
+      return;
+    }
+
+    // Regular preset grid navigation
+    let nextPreset = handleInput({
+      currHighlithedNav: actionType,
+      array: presetArray,
+      index: selectedPreset,
+      numCols,
+      onAction: handlePresetAction,
+    });
+
+    // Ensure we have a valid index
+    if (nextPreset >= 0 && nextPreset < presetArray.length) {
+      setSelectedPreset(nextPreset);
     }
   };
-
-  // Auto-scroll to the selected preset
-  useEffect(() => {
-    safeScrollToPosition(
-      selectedPreset,
-      presetArray.length,
-      isButtonHighlighted
-    );
-  }, [selectedPreset, isButtonHighlighted, presetArray.length]);
 
   // Handle tap event (manual input)
   const handleTap = () => {
-    // Handle button navigation when buttons are highlighted
-    if (isButtonHighlighted) {
-      if (currHighlithedNav === "up") {
-        // Move back to the preset grid
-        setIsButtonHighlighted(false);
-        return;
-      } else if (
-        currHighlithedNav === "left" ||
-        currHighlithedNav === "right"
-      ) {
-        // Toggle between buttons
-        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
-        return;
-      } else if (currHighlithedNav === "action") {
-        // Perform button action
-        handleButtonAction();
-        return;
-      }
-      return;
-    }
-
-    // Check if we're in the bottom row and going down
-    const isLastRow =
-      Math.floor(selectedPreset / numCols) ===
-      Math.floor((presetArray.length - 1) / numCols);
-    if (currHighlithedNav === "down" && isLastRow) {
-      setIsButtonHighlighted(true);
-      return;
-    }
-
-    // Regular preset grid navigation
-    let nextPreset = handleInput({
-      currHighlithedNav,
-      array: presetArray,
-      index: selectedPreset,
-      numCols,
-      onAction: handlePresetAction,
-    });
-
-    // Ensure we have a valid index
-    if (nextPreset >= 0 && nextPreset < presetArray.length) {
-      setSelectedPreset(nextPreset);
-    }
+    handlePreset(currHighlithedNav);
   };
 
-  // // Use the BLE input hook to respond to hardware controls for presets
-  // const { newIndex } = useBLEInput({
-  //   array: presetArray,
-  //   index: selectedPreset,
-  //   numCols,
-  //   onAction: handleCombinedAction,
-  //   isEnabled: isConnected && !isButtonHighlighted, // Only enable when connected and not on buttons
-  // });
-
-  // // Update selected preset when BLE input changes
-  // useEffect(() => {
-  //   if (
-  //     !isButtonHighlighted &&
-  //     newIndex >= 0 &&
-  //     newIndex < presetArray.length
-  //   ) {
-  //     setSelectedPreset(newIndex);
-  //   }
-  // }, [newIndex, presetArray.length, isButtonHighlighted]);
-
+  // Handle last action event (BLE input)
   useEffect(() => {
-    // console.log("Path", pathname)
-    if (!isPresetPage || lastAction === "none") return;
+    if (!isPresetPage) return;
+    if(!isConnected) {
+      console.error("Presets Page: Not connected, ignoring last action.");
+      return;
+    }
     console.log("Last Action (Presets):", lastAction);
-    if (isButtonHighlighted) {
-      if (lastAction === "up") {
-        // Move back to the preset grid
-        setIsButtonHighlighted(false);
-        return;
-      } else if (
-        lastAction === "left" ||
-        lastAction === "right"
-      ) {
-        // Toggle between buttons
-        setHighlightedButton(highlightedButton === 0 ? 1 : 0);
-        return;
-      } else if (lastAction === "action") {
-        // Perform button action
-        handleButtonAction();
-        return;
-      }
-      return;
-    }
-
-    // Check if we're in the bottom row and going down
-    const isLastRow =
-      Math.floor(selectedPreset / numCols) ===
-      Math.floor((presetArray.length - 1) / numCols);
-    if (lastAction === "down" && isLastRow) {
-      setIsButtonHighlighted(true);
-      return;
-    }
-
-    // Regular preset grid navigation
-    let nextPreset = handleInput({
-      currHighlithedNav: lastAction,
-      array: presetArray,
-      index: selectedPreset,
-      numCols,
-      onAction: handlePresetAction,
-    });
-
-    // Ensure we have a valid index
-    if (nextPreset >= 0 && nextPreset < presetArray.length) {
-      setSelectedPreset(nextPreset);
-    }
+    handlePreset(lastAction);
   }, [lastAction]);
 
   const PresetItem = ({

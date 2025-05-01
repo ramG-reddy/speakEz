@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { usePathname } from "expo-router";
+import { NavAction } from "@/lib/types";
 
 export default function WordBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
@@ -82,46 +83,21 @@ export default function WordBuilder() {
     }
   };
 
-  const handleCombinedAction = () => {
+  const handleWord = (actionType: NavAction) => {
+    if(actionType === "none") return; // Ignore if no action
+
     if (isTopButtonHighlighted) {
-      handleTopButtonAction();
-    } else if (isSuggestionHighlighted) {
-      handleSuggestionAction();
-    } else if (isBottomButtonHighlighted) {
-      handleBottomButtonAction();
-    } else {
-      handleKeyPress(keyboard[selectedKey]);
-    }
-  };
-
-  // const { newIndex } = useBLEInput({
-  //   array: keyboard,
-  //   index: selectedKey,
-  //   numCols,
-  //   onAction: handleCombinedAction,
-  //   isEnabled:
-  //     isConnected && !isTopButtonHighlighted && !isBottomButtonHighlighted,
-  // });
-
-  // useEffect(() => {
-  //   if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
-  //     setSelectedKey(newIndex);
-  //   }
-  // }, [newIndex]);
-
-  const handleTap = () => {
-    if (isTopButtonHighlighted) {
-      if (currHighlithedNav === "down") {
+      if (actionType === "down") {
         // Move back to the keyboard grid
         setIsTopButtonHighlighted(false);
         setIsSuggestionHighlighted(true);
       } else if (
-        currHighlithedNav === "left" ||
-        currHighlithedNav === "right"
+        actionType === "left" ||
+        actionType === "right"
       ) {
         // Toggle between top buttons
         setTopHighlightedButton(topHighlightedButton === 0 ? 1 : 0);
-      } else if (currHighlithedNav === "action") {
+      } else if (actionType === "action") {
         // Perform top button action
         handleTopButtonAction();
       }
@@ -129,97 +105,7 @@ export default function WordBuilder() {
     }
 
     if (isSuggestionHighlighted) {
-      switch (currHighlithedNav) {
-        case "up":
-          setIsSuggestionHighlighted(false);
-          setIsTopButtonHighlighted(true);
-          break;
-        case "down":
-          setIsSuggestionHighlighted(false);
-          break;
-        case "left":
-          setHighlightedSuggestionIndex((prev) => {
-            let newIdx = (prev - 1 + suggestionsArray.length) % suggestionsArray.length;
-            return newIdx;
-          });
-          break;
-        case "right":
-          setHighlightedSuggestionIndex((prev) => {
-            let newIdx = (prev + 1) % suggestionsArray.length;
-            return newIdx;
-          });
-          break;
-        case "action":
-          handleSuggestionAction();
-          break;
-        default:
-          break;
-      }
-      return;
-    }
-
-    if (isBottomButtonHighlighted) {
-      if (currHighlithedNav === "up") {
-        // Move back to the keyboard grid
-        setIsBottomButtonHighlighted(false);
-      } else if (
-        currHighlithedNav === "left" ||
-        currHighlithedNav === "right"
-      ) {
-        // Toggle between bottom buttons
-        setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
-      } else if (currHighlithedNav === "action") {
-        // Perform bottom button action
-        handleBottomButtonAction();
-      }
-      return;
-    }
-
-    const isLastRow =
-      Math.floor(selectedKey / numCols) ===
-      Math.floor((keyboard.length - 1) / numCols);
-
-    const isFirstRow = Math.floor(selectedKey / numCols) === 0;
-
-    if (currHighlithedNav === "up" && isFirstRow) {
-      setIsSuggestionHighlighted(true);
-    } else if (currHighlithedNav === "down" && isLastRow) {
-      setIsBottomButtonHighlighted(true);
-    } else {
-      const nextKey = handleInput({
-        currHighlithedNav,
-        array: keyboard,
-        index: selectedKey,
-        numCols,
-        onAction: handleCombinedAction,
-      });
-      setSelectedKey(nextKey);
-    }
-  };
-
-  useEffect(() => {
-    if(!isWordBuilderPage || lastAction === "none") return;
-    console.log("Last Action (Word):", lastAction);
-    if (isTopButtonHighlighted) {
-      if (lastAction === "down") {
-        // Move back to the keyboard grid
-        setIsTopButtonHighlighted(false);
-        setIsSuggestionHighlighted(true);
-      } else if (
-        lastAction === "left" ||
-        lastAction === "right"
-      ) {
-        // Toggle between top buttons
-        setTopHighlightedButton(topHighlightedButton === 0 ? 1 : 0);
-      } else if (lastAction === "action") {
-        // Perform top button action
-        handleTopButtonAction();
-      }
-      return;
-    }
-
-    if (isSuggestionHighlighted) {
-      switch (lastAction) {
+      switch (actionType) {
         case "up":
           setIsSuggestionHighlighted(false);
           setIsTopButtonHighlighted(true);
@@ -250,16 +136,16 @@ export default function WordBuilder() {
     }
 
     if (isBottomButtonHighlighted) {
-      if (lastAction === "up") {
+      if (actionType === "up") {
         // Move back to the keyboard grid
         setIsBottomButtonHighlighted(false);
       } else if (
-        lastAction === "left" ||
-        lastAction === "right"
+        actionType === "left" ||
+        actionType === "right"
       ) {
         // Toggle between bottom buttons
         setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
-      } else if (lastAction === "action") {
+      } else if (actionType === "action") {
         // Perform bottom button action
         handleBottomButtonAction();
       }
@@ -272,20 +158,33 @@ export default function WordBuilder() {
 
     const isFirstRow = Math.floor(selectedKey / numCols) === 0;
 
-    if (lastAction === "up" && isFirstRow) {
+    if (actionType === "up" && isFirstRow) {
       setIsSuggestionHighlighted(true);
-    } else if (lastAction === "down" && isLastRow) {
+    } else if (actionType === "down" && isLastRow) {
       setIsBottomButtonHighlighted(true);
     } else {
       const nextKey = handleInput({
-        currHighlithedNav: lastAction,
+        currHighlithedNav,
         array: keyboard,
         index: selectedKey,
         numCols,
-        onAction: handleCombinedAction,
+        onAction: () => handleKeyPress(keyboard[selectedKey]),
       });
       setSelectedKey(nextKey);
     }
+  }
+
+  const handleTap = () => {
+    handleWord(currHighlithedNav);
+  };
+
+  useEffect(() => {
+    if(!isWordBuilderPage) return;
+    if(!isConnected){
+      console.error("Word Builder Page: Not connected, ignoring last action.");
+      return;
+    }
+    handleWord(lastAction);
   }, [lastAction]);
 
   return (
