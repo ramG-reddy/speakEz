@@ -1,11 +1,10 @@
 import { Text, View } from "react-native";
+import FormContainer from "@/components/FormContainer";
 
 export default function Index() {
   return (
-    <View className="flex-center flex-1 gap-2">
-      <Text className="text-4xl text-blue-500 font-semibold">
-        Welcome to the Application.
-      </Text>
+    <View className="flex-center flex-1 gap-2 h-full">
+      <FormContainer />
     </View>
   );
 }
