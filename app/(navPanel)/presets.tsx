@@ -1,6 +1,6 @@
-import { PRESETS } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
+import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { useGridScroll } from "@/lib/hooks/useGridScroll";
 import { NavAction } from "@/lib/types";
 import { handleInput } from "@/lib/utils/handleInput";
@@ -19,9 +19,17 @@ import {
 export default function Presets() {
   const { currHighlithedNav } = useAppContext();
   const { isConnected, lastAction, setLastAction } = useBLE();
+  const { phrases } = useOnboarding();
 
   const numCols = 3;
-  const [presetArray, setPresetArray] = useState(PRESETS);
+  const [presetArray, setPresetArray] = useState(phrases);
+
+  // Update presets when they change in the onboarding context
+  useEffect(() => {
+    if (phrases && phrases.length > 0) {
+      setPresetArray(phrases);
+    }
+  }, [phrases]);
 
   const [selectedPreset, setSelectedPreset] = useState(0);
 
@@ -69,7 +77,7 @@ export default function Presets() {
   };
 
   const handlePreset = (actionType: NavAction) => {
-    if(actionType === "none") return; // Ignore if no action
+    if (actionType === "none") return; // Ignore if no action
 
     // Handle button navigation when buttons are highlighted
     if (isButtonHighlighted) {
@@ -119,7 +127,7 @@ export default function Presets() {
   // Handle last action event (BLE input)
   useEffect(() => {
     if (!isPresetPage) return;
-    if(!isConnected) {
+    if (!isConnected) {
       console.error("Presets Page: Not connected, ignoring last action.");
       return;
     }

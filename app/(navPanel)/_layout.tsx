@@ -31,7 +31,7 @@ export default function NavPanelLayout() {
           </Text>
         </View>
         <NavPatch />
-        <Pressable onPress={() => router.push("../(home)")}>
+        <Pressable onPress={() => router.push("../(home)/landing-page")}>
           <View className="justify-center items-center bg-blue-500 rounded-lg shadow-md">
             <Text className="text-white text-lg px-4 py-2">Home</Text>
           </View>

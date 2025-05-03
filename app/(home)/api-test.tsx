@@ -29,7 +29,7 @@ export default function ApiTest() {
     data: null,
   });
   const [endpoint, setEndpoint] = useState(
-    "http://192.168.242.9:8000/generate"
+    "https://jsonplaceholder.typicode.com/posts/1"
   );
   const { showNotification } = useNotification();
   const [networkState, setNetworkState] = useState<NetworkState>({
@@ -89,14 +89,14 @@ export default function ApiTest() {
       
       const response = await fetch(url, {
         signal: controller.signal,
-        method: "POST",
+        method: "GET",
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text: "I want us",
-        }),
+        // body: JSON.stringify({
+        //   text: "I want us",
+        // }),
         // Adding cache control headers for better Android caching behavior
         cache: 'no-cache',
       });
