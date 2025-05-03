@@ -67,6 +67,12 @@ export default function NavBar() {
           </TouchableOpacity>
         )}
 
+        <Link href="/api-test" asChild>
+          <TouchableOpacity>
+            <Text className="text-blue-400">🌐</Text>
+          </TouchableOpacity>
+        </Link>
+
         <Link href="/presets" asChild>
           <TouchableOpacity>
             <Text className="text-blue-400">📃</Text>
