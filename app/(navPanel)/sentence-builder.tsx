@@ -1,12 +1,14 @@
 import { MOCK_DATA } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
-import { useBLEInput } from "@/lib/hooks/useBLEInput";
+import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { useGridScroll } from "@/lib/hooks/useGridScroll";
+import { NavAction } from "@/lib/types";
+import { getSuggestions } from "@/lib/utils/apiCalls";
 import { handleInput } from "@/lib/utils/handleInput";
 import { speakText } from "@/lib/utils/speakText";
-import { router } from "expo-router";
-import { act, useEffect, useState } from "react";
+import { router, usePathname } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -16,13 +18,13 @@ import {
   Text,
   View,
 } from "react-native";
-import { usePathname } from "expo-router";
-import { NavAction } from "@/lib/types";
 
 export default function SentenceBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } =
     useAppContext();
   const { isConnected, lastAction, setLastAction } = useBLE();
+  const { phrases, setPhrases } = useOnboarding();
+
   const numCols = 3;
   const [wordArray, setWordArray] = useState(MOCK_DATA);
 
@@ -68,8 +70,21 @@ export default function SentenceBuilder() {
     setTextAreaValue(sentence);
   }, [sentence]);
 
+  useEffect(() => {
+    if(sentence === "") return;
+    const fetchSuggestions = async () => {
+      const newWordSuggestions = await getSuggestions({
+        sentence,
+        numTokens: 9,
+        type: "sentence-builder",
+      });
+      setWordArray(newWordSuggestions);
+    };
+    fetchSuggestions();
+  }, [sentence]);
+
   // Helper function for adding words to sentence
-  const addWordToSentence = (word: string) => {
+  const addWordToSentence = async (word: string) => {
     setSentence((prev) => {
       if (prev === "") {
         return word;
@@ -82,7 +97,7 @@ export default function SentenceBuilder() {
   const handleWordAction = () => {
     if (!isTopButtonHighlighted && !isBottomButtonHighlighted) {
       if (selectedWord >= 0 && selectedWord < wordArray.length) {
-        const word = wordArray[selectedWord].data;
+        const word = wordArray[selectedWord];
         addWordToSentence(word);
       }
     }
@@ -94,6 +109,7 @@ export default function SentenceBuilder() {
     } else {
       console.log("Sentence page:", sentence);
       speakText(sentence);
+      setPhrases([...phrases, sentence]);
     }
   };
 
@@ -215,7 +231,7 @@ export default function SentenceBuilder() {
       onLayout={index === 0 ? handleItemLayout : undefined}
     >
       <Text style={[styles.wordText, isSmallDevice && styles.smallDeviceText]}>
-        {item.data}
+        {item}
       </Text>
     </View>
   );
@@ -292,7 +308,6 @@ export default function SentenceBuilder() {
         data={wordArray}
         renderItem={WordItem}
         numColumns={numCols}
-        keyExtractor={(item) => item.id}
         initialNumToRender={wordArray.length}
         maxToRenderPerBatch={wordArray.length}
         windowSize={21}

@@ -1,20 +1,19 @@
-import { useState, useEffect } from "react";
+import { PRESETS } from "@/lib/constants/Data";
+import { useOnboarding } from "@/lib/context/OnboardingContext";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  View,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  FlatList,
-  Alert,
+  View
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useOnboarding } from "@/lib/context/OnboardingContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PRESETS } from "@/lib/constants/Data";
 
 export default function PhrasesScreen() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function PhrasesScreen() {
   const { patientInfo, setPhrases, completeOnboarding } = useOnboarding();
 
   const [currentPhrases, setCurrentPhrases] =
-    useState<{ id: string; text: string }[]>(PRESETS);
+    useState(PRESETS);
   const [newPhrase, setNewPhrase] = useState("");
   const [error, setError] = useState("");
 
@@ -34,7 +33,7 @@ export default function PhrasesScreen() {
 
     if (
       currentPhrases.some(
-        (phrase) => phrase.text.toLowerCase() === newPhrase.trim().toLowerCase()
+        (phrase) => phrase.toLowerCase() === newPhrase.trim().toLowerCase()
       )
     ) {
       setError("This phrase already exists");
@@ -47,26 +46,23 @@ export default function PhrasesScreen() {
 
   const addPhrase = () => {
     if (validatePhrase()) {
-      const newId = (
-        Math.max(...currentPhrases.map((p) => parseInt(p.id)), 0) + 1
-      ).toString();
       const updatedPhrases = [
         ...currentPhrases,
-        { id: newId, text: newPhrase.trim() },
+        newPhrase.trim(),
       ];
       setCurrentPhrases(updatedPhrases);
       setNewPhrase("");
     }
   };
 
-  const removePhrase = (id: string) => {
+  const removePhrase = (sentence: string) => {
     if (Platform.OS === "web") {
       const confirmRemove = confirm(
         "Are you sure you want to remove this phrase?"
       );
       if (!confirmRemove) return;
       const updatedPhrases = currentPhrases.filter(
-        (phrase) => phrase.id !== id
+        (phrase) => phrase !== sentence
       );
       setCurrentPhrases(updatedPhrases);
       return;
@@ -83,7 +79,7 @@ export default function PhrasesScreen() {
           text: "Remove",
           onPress: () => {
             const updatedPhrases = currentPhrases.filter(
-              (phrase) => phrase.id !== id
+              (phrase) => phrase !== sentence
             );
             setCurrentPhrases(updatedPhrases);
           },
@@ -159,16 +155,15 @@ export default function PhrasesScreen() {
             data={currentPhrases}
             renderItem={({ item }) => (
               <View style={styles.phraseItem}>
-                <Text style={styles.phraseText}>{item.text}</Text>
+                <Text style={styles.phraseText}>{item}</Text>
                 <TouchableOpacity
                   style={styles.removeButton}
-                  onPress={() => removePhrase(item.id)}
+                  onPress={() => removePhrase(item)}
                 >
                   <Text style={styles.removeButtonText}>✕</Text>
                 </TouchableOpacity>
               </View>
             )}
-            keyExtractor={(item) => item.id}
             style={styles.phrasesList}
           />
         )}

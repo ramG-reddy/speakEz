@@ -61,7 +61,7 @@ export default function Presets() {
 
   // Define the action handler to avoid code duplication
   const handlePresetAction = () => {
-    const phrase = `${presetArray[selectedPreset]?.text || ""}`;
+    const phrase = `${presetArray[selectedPreset] || ""}`;
     console.log("Preset Page:", phrase);
     speakText(phrase);
   };
@@ -155,7 +155,7 @@ export default function Presets() {
       <Text
         style={[styles.presetText, isSmallDevice && styles.smallPresetText]}
       >
-        {item.text}
+        {item}
       </Text>
     </View>
   );
@@ -177,7 +177,6 @@ export default function Presets() {
         data={presetArray}
         renderItem={PresetItem}
         numColumns={numCols}
-        keyExtractor={(item) => item.id}
         initialNumToRender={presetArray.length}
         maxToRenderPerBatch={presetArray.length}
         windowSize={21}

@@ -1,15 +1,16 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-} from "react-native";
+import { useNotification } from "@/lib/context/NotificationContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNotification } from "@/lib/context/NotificationContext";
 import { router } from "expo-router";
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Settings() {
@@ -18,6 +19,27 @@ export default function Settings() {
   const insets = useSafeAreaInsets();
 
   const resetOnboarding = async () => {
+    if (Platform.OS === "web") {
+      const confirmRemove = confirm(
+        "Are you sure you want to Reset Onboarding?"
+      );
+      if (!confirmRemove) return;
+      const remove = async () => {
+        try {
+          await AsyncStorage.clear();
+          showNotification("Onboarding reset successfully", "success");
+
+          // Trigger a check of onboarding status, which will redirect to onboarding
+          await checkOnboardingStatus();
+          router.replace("../(onboarding)");
+        } catch (error) {
+          console.error("Failed to reset onboarding:", error);
+          showNotification("Failed to reset onboarding", "error");
+        }
+      };
+      remove();
+      return;
+    }
     Alert.alert(
       "Reset Onboarding",
       "This will clear all patient data and restart the onboarding process. Are you sure?",
@@ -90,8 +112,8 @@ export default function Settings() {
         <View style={styles.phrasesContainer}>
           {phrases.length > 0 ? (
             phrases.map((phrase) => (
-              <View key={phrase.id} style={styles.phraseItem}>
-                <Text style={styles.phraseText}>{phrase.text}</Text>
+              <View style={styles.phraseItem}>
+                <Text style={styles.phraseText}>{phrase}</Text>
               </View>
             ))
           ) : (

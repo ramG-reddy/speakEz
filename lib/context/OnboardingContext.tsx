@@ -2,6 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PRESETS } from "@/lib/constants/Data";
 import { router } from "expo-router";
+import {
+  ONBOARDING_COMPLETE_KEY,
+  PATIENT_INFO_KEY,
+  PHRASES_KEY,
+} from "@/lib/Config";
 
 // Define the types for our patient data
 export interface PatientInfo {
@@ -14,18 +19,13 @@ export interface PatientInfo {
 interface OnboardingContextType {
   isOnboardingComplete: boolean;
   patientInfo: PatientInfo | null;
-  phrases: { id: string; text: string }[];
+  phrases: string[];
   setPatientInfo: (info: PatientInfo) => Promise<void>;
-  setPhrases: (phrases: { id: string; text: string }[]) => Promise<void>;
+  setPhrases: (phrases: string[]) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   checkOnboardingStatus: () => Promise<boolean>;
   loading: boolean;
 }
-
-// Storage keys
-const ONBOARDING_COMPLETE_KEY = "onboarding_complete";
-const PATIENT_INFO_KEY = "patient_info";
-const PHRASES_KEY = "patient_phrases";
 
 // Create the context
 const OnboardingContext = createContext<OnboardingContextType>({
@@ -45,7 +45,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [patientInfo, setPatientInfoState] = useState<PatientInfo | null>(null);
-  const [phrases, setPhrasesState] = useState<{ id: string; text: string }[]>(
+  const [phrases, setPhrasesState] = useState<string[]>(
     []
   );
   const [loading, setLoading] = useState(true);
@@ -105,7 +105,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Function to set phrases
   const setPhrases = async (
-    newPhrases: { id: string; text: string }[]
+    newPhrases: string[]
   ): Promise<void> => {
     try {
       await AsyncStorage.setItem(PHRASES_KEY, JSON.stringify(newPhrases));

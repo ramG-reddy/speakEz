@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { usePathname } from "expo-router";
 import { NavAction } from "@/lib/types";
+import { getSuggestions } from "@/lib/utils/apiCalls";
 
 export default function WordBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
@@ -24,7 +25,7 @@ export default function WordBuilder() {
   const numCols = 12;
   const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
 
-  const [phrase, setPhrase] = useState("");
+  const [halfWord, setHalfWord] = useState("");
   const [selectedKey, setSelectedKey] = useState(0);
 
   const [isTopButtonHighlighted, setIsTopButtonHighlighted] = useState(false);
@@ -46,8 +47,24 @@ export default function WordBuilder() {
 
   const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
 
+  useEffect(() => {
+    if(halfWord.length < 1) return; // Ignore if halfWord is empty
+    if(!isWordBuilderPage) return; // Ignore if not on the word builder page
+    const fetchSuggestions = async () => {
+      const newSentence = textAreaValue.trim() + " " + halfWord.trim();
+      const newWordSuggestions = await getSuggestions({
+        sentence: newSentence,
+        numTokens: 3,
+        type: "word-builder",
+      });
+      setSuggestionsArray(newWordSuggestions);
+    };
+
+    fetchSuggestions();
+  }, [halfWord]);
+
   const handleKeyPress = (key: string) => {
-    setPhrase((prev) => prev + key);
+    setHalfWord((prev) => prev + key);
   };
 
   const addToSentence = (data: string) => {
@@ -57,10 +74,10 @@ export default function WordBuilder() {
 
   const handleTopButtonAction = () => {
     if (topHighlightedButton === 0) {
-      setPhrase(""); // Clear action
+      setHalfWord(""); // Clear action
     } else {
-      addToSentence(phrase); // Done action
-      setPhrase(""); // Clear the phrase after sending it to the sentence builder page
+      addToSentence(halfWord); // Done action
+      setHalfWord(""); // Clear the halfWord after sending it to the sentence builder page
       setLastAction("none"); // Reset last action to avoid conflicts
       router.push("./sentence-builder"); // Navigate to the sentence builder page
     }
@@ -69,17 +86,17 @@ export default function WordBuilder() {
   const handleSuggestionAction = () => {
     const selectedSuggestion = suggestionsArray[highlightedSuggestionIndex];
     console.log("handleSuggestion Word Page:",selectedSuggestion);
-    addToSentence(selectedSuggestion.data); // Add the selected suggestion to the sentence
-    setPhrase("");
+    addToSentence(selectedSuggestion); // Add the selected suggestion to the sentence
+    setHalfWord("");
     setLastAction("none"); // Reset last action to avoid conflicts
     router.push("./sentence-builder"); // Navigate to the sentence builder page
   };
 
   const handleBottomButtonAction = () => {
     if (bottomHighlightedButton === 0) {
-      setPhrase((prev) => prev + " "); // Space action
+      setHalfWord((prev) => prev + " "); // Space action
     } else {
-      setPhrase((prev) => prev.slice(0, -1)); // Backspace action
+      setHalfWord((prev) => prev.slice(0, -1)); // Backspace action
     }
   };
 
@@ -205,13 +222,13 @@ export default function WordBuilder() {
                 isSmallDevice && styles.smallDeviceText,
               ]}
             >
-              {phrase}
+              {halfWord}
             </Text>
           </View>
           <View className="flex flex-row items-center p-1 gap-1">
             <View>
               <Pressable
-                onPress={() => setPhrase("")}
+                onPress={() => setHalfWord("")}
                 style={[
                   styles.textAreaBtn,
                   { backgroundColor: "#f00" },
@@ -229,7 +246,7 @@ export default function WordBuilder() {
             <View>
               <Pressable
                 onPress={() => {
-                  speakText(phrase);
+                  speakText(halfWord);
                 }}
                 style={[
                   styles.textAreaBtn,
@@ -264,7 +281,7 @@ export default function WordBuilder() {
                     styles.selectedKey,
                 ]}
               >
-                <Text style={styles.suggestionText}>{item.data}</Text>
+                <Text style={styles.suggestionText}>{item}</Text>
               </View>
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -297,7 +314,7 @@ export default function WordBuilder() {
       </View>
       <View className="flex flex-row justify-around items-center mt-2">
         <Pressable
-          onPress={() => setPhrase((prev) => prev + " ")}
+          onPress={() => setHalfWord((prev) => prev + " ")}
           style={[
             styles.bottomButton,
             isBottomButtonHighlighted &&
@@ -308,7 +325,7 @@ export default function WordBuilder() {
           <Text className="text-center text-lg">Space</Text>
         </Pressable>
         <Pressable
-          onPress={() => setPhrase((prev) => prev.slice(0, -1))}
+          onPress={() => setHalfWord((prev) => prev.slice(0, -1))}
           style={[
             styles.bottomButton,
             isBottomButtonHighlighted &&
