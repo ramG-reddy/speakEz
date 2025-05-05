@@ -22,6 +22,7 @@ export default function NavBar() {
   const {
     isConnected,
     startScan,
+    stopScan,
     isScanning,
     disconnect,
     currDeviceType,
@@ -46,6 +47,10 @@ export default function NavBar() {
         "Failed to disconnect the device. Please try again.",
         "error"
       );
+    } finally {
+      setCurrDeviceType("none"); // Reset device type on disconnect
+      setShowDeviceTypeDropdown(false); // Close the dropdown if open
+      stopScan(); // Stop scanning after disconnecting
     }
   };
 
