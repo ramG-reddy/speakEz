@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useAppContext } from "@/lib/context/AppContext";
 import { useNotification } from "@/lib/context/NotificationContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
-import { useAppContext } from "@/lib/context/AppContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useState } from "react";
 import {
   Alert,
   Platform,

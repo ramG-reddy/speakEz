@@ -1,22 +1,22 @@
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { Link } from "expo-router";
-import { useBLE } from "@/lib/context/BLEContext";
-import { useState } from "react";
-import BLEDeviceSelector from "./BLEDeviceSelector";
-import { useNotification } from "@/lib/context/NotificationContext";
-import { bleService } from "@/lib/services/BLEService";
-import {
   EMG_SENSOR_IDENTIFIER_PREFIX,
   GYRO_SENSOR_IDENTIFIER_PREFIX,
   TOUCH_SENSOR_IDENTIFIER_PREFIX,
 } from "@/lib/Config";
+import { useBLE } from "@/lib/context/BLEContext";
+import { useNotification } from "@/lib/context/NotificationContext";
+import { bleService } from "@/lib/services/BLEService";
+import { Link } from "expo-router";
+import { useState } from "react";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import BLEDeviceSelector from "./BLEDeviceSelector";
 
 export default function NavBar() {
   const {

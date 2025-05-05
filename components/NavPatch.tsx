@@ -1,25 +1,25 @@
-import { View, Text, Dimensions, Image, Pressable } from "react-native";
-import { useEffect, useState } from "react";
-import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/lib/Config";
+import { ORDER_OF_HIGHLIGHTS } from "@/lib/Config";
 import { useAppContext } from "@/lib/context/AppContext";
 import { NavAction } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { Dimensions, Image, Pressable, Text, View } from "react-native";
 
 export default function NavigationControl() {
   const dirs = ORDER_OF_HIGHLIGHTS;
   const MP = (act: NavAction) => {
-    if(act === "action") return 0;
-    if(act === "up") return 1;
-    if(act === "right") return 2;
-    if(act === "down") return 3;
-    if(act === "left") return 4;
+    if (act === "action") return 0;
+    if (act === "up") return 1;
+    if (act === "right") return 2;
+    if (act === "down") return 3;
+    if (act === "left") return 4;
     return 0; // Default case
-  }
-  const { currHighlithedNav, setCurrHighlightedNav, changeDelay } = useAppContext();
+  };
+  const { currHighlithedNav, setCurrHighlightedNav, changeDelay } =
+    useAppContext();
   const [currentIndex, setCurrentIndex] = useState(MP(currHighlithedNav));
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
-
 
   // First effect: Update local state
   useEffect(() => {

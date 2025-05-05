@@ -45,9 +45,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [patientInfo, setPatientInfoState] = useState<PatientInfo | null>(null);
-  const [phrases, setPhrasesState] = useState<string[]>(
-    []
-  );
+  const [phrases, setPhrasesState] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Check if onboarding is complete on mount
@@ -104,9 +102,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Function to set phrases
-  const setPhrases = async (
-    newPhrases: string[]
-  ): Promise<void> => {
+  const setPhrases = async (newPhrases: string[]): Promise<void> => {
     try {
       await AsyncStorage.setItem(PHRASES_KEY, JSON.stringify(newPhrases));
       setPhrasesState(newPhrases);

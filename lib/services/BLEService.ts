@@ -1,5 +1,6 @@
 import { CHARACTERISTIC_UUID, SERVICE_UUID } from "@/lib/Config";
 import { NavAction } from "@/lib/types";
+import { handleDecodedValue } from "@/lib/utils/handleDecodedValue";
 import { Platform } from "react-native";
 import {
   BleManager,
@@ -7,7 +8,6 @@ import {
   Device,
   State,
 } from "react-native-ble-plx";
-import { handleDecodedValue } from "@/lib/utils/handleDecodedValue";
 
 export class BLEService {
   private manager: BleManager | null = null;

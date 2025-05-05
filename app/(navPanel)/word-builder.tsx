@@ -1,10 +1,12 @@
+import { TOUCH_SENSOR_IDENTIFIER_PREFIX } from "@/lib/Config";
 import { MOCK_WORDS } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
-import { useBLEInput } from "@/lib/hooks/useBLEInput";
+import { NavAction } from "@/lib/types";
+import { getSuggestions } from "@/lib/utils/apiCalls";
 import { handleInput } from "@/lib/utils/handleInput";
 import { speakText } from "@/lib/utils/speakText";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -15,13 +17,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { usePathname } from "expo-router";
-import { NavAction } from "@/lib/types";
-import { getSuggestions } from "@/lib/utils/apiCalls";
-import { TOUCH_SENSOR_IDENTIFIER_PREFIX } from "@/lib/Config";
 
 export default function WordBuilder() {
-  const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
+  const { currHighlithedNav, textAreaValue, setTextAreaValue } =
+    useAppContext();
   const { isConnected, lastAction, setLastAction, currDeviceType } = useBLE();
   const numCols = 12;
   const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
@@ -49,8 +48,8 @@ export default function WordBuilder() {
   const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
 
   useEffect(() => {
-    if(halfWord.trim().length < 1) return; // Ignore if halfWord is empty
-    if(!isWordBuilderPage) return; // Ignore if not on the word builder page
+    if (halfWord.trim().length < 1) return; // Ignore if halfWord is empty
+    if (!isWordBuilderPage) return; // Ignore if not on the word builder page
     const fetchSuggestions = async () => {
       const newSentence = textAreaValue.trim() + " " + halfWord.trim();
       const newWordSuggestions = await getSuggestions({
@@ -69,9 +68,9 @@ export default function WordBuilder() {
   };
 
   const addToSentence = (data: string) => {
-    const newSentence = textAreaValue.trim()+ " " + data.trim();
+    const newSentence = textAreaValue.trim() + " " + data.trim();
     setTextAreaValue(newSentence);
-  }
+  };
 
   const handleTopButtonAction = () => {
     if (topHighlightedButton === 0) {
@@ -86,7 +85,7 @@ export default function WordBuilder() {
 
   const handleSuggestionAction = () => {
     const selectedSuggestion = suggestionsArray[highlightedSuggestionIndex];
-    console.log("handleSuggestion Word Page:",selectedSuggestion);
+    console.log("handleSuggestion Word Page:", selectedSuggestion);
     addToSentence(selectedSuggestion); // Add the selected suggestion to the sentence
     setHalfWord("");
     setLastAction("none"); // Reset last action to avoid conflicts
@@ -102,17 +101,14 @@ export default function WordBuilder() {
   };
 
   const handleWord = (actionType: NavAction) => {
-    if(actionType === "none") return; // Ignore if no action
+    if (actionType === "none") return; // Ignore if no action
 
     if (isTopButtonHighlighted) {
       if (actionType === "down") {
         // Move back to the keyboard grid
         setIsTopButtonHighlighted(false);
         setIsSuggestionHighlighted(true);
-      } else if (
-        actionType === "left" ||
-        actionType === "right"
-      ) {
+      } else if (actionType === "left" || actionType === "right") {
         // Toggle between top buttons
         setTopHighlightedButton(topHighlightedButton === 0 ? 1 : 0);
       } else if (actionType === "action") {
@@ -157,10 +153,7 @@ export default function WordBuilder() {
       if (actionType === "up") {
         // Move back to the keyboard grid
         setIsBottomButtonHighlighted(false);
-      } else if (
-        actionType === "left" ||
-        actionType === "right"
-      ) {
+      } else if (actionType === "left" || actionType === "right") {
         // Toggle between bottom buttons
         setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
       } else if (actionType === "action") {
@@ -190,19 +183,20 @@ export default function WordBuilder() {
       });
       setSelectedKey(nextKey);
     }
-  }
+  };
 
   const handleTap = () => {
     handleWord(currHighlithedNav);
   };
 
   useEffect(() => {
-    if(!isWordBuilderPage || lastAction === "none") return;
-    if(!isConnected){
+    if (!isWordBuilderPage || lastAction === "none") return;
+    if (!isConnected) {
       // console.error("Word Builder Page: Not connected, ignoring last action.");
       return;
     }
-    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handleWord(lastAction);
+    if (currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX)
+      handleWord(lastAction);
     else {
       handleWord(currHighlithedNav);
     }

@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NavAction } from "@/lib/types";
 import { CHANGE_DELAY_KEY, CHANGE_DELAY_ms } from "@/lib/Config";
+import { NavAction } from "@/lib/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AppContext = createContext({
   currHighlithedNav: "right" as NavAction,

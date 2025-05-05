@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
 import { Link } from "expo-router";
+import React from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export default function LandingPage() {
   return (
@@ -12,7 +12,7 @@ export default function LandingPage() {
             <Text className="text-blue-400 text-4xl">/Settings</Text>
           </TouchableOpacity>
         </Link>
-        
+
         <Link href="/presets" asChild>
           <TouchableOpacity>
             <Text className="text-blue-400 text-4xl">/Presets</Text>

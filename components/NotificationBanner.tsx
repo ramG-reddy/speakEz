@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   Animated,
-  TouchableOpacity,
   Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

@@ -1,14 +1,12 @@
 import NavPatch from "@/components/NavPatch";
 import { router, Stack } from "expo-router";
+import { useEffect, useState } from "react";
 import { Dimensions, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
-import { useBLE } from "@/lib/context/BLEContext";
 
 export default function NavPanelLayout() {
   const insets = useSafeAreaInsets();
   const { width } = Dimensions.get("window");
-  const { isConnected } = useBLE(); // Assuming you have a BLE context to check connection status
 
   const [currentTime, setCurrentTime] = useState("");
 
@@ -45,7 +43,7 @@ export default function NavPanelLayout() {
         </View>
       </View>
     );
-  }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -65,7 +63,7 @@ export default function NavPanelLayout() {
 
   const showSideBar = () => {
     return true;
-  }
+  };
 
   return (
     <View className="flex-1 flex-row">

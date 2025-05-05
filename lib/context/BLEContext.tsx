@@ -129,7 +129,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     bleService.initialize();
 
     // Set up action listener
-    
+
     const actionListener = (action: NavAction) => {
       // console.log("Received action:", action);
       setLastAction(action);

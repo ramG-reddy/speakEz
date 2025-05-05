@@ -1,16 +1,15 @@
+import { useBLE } from "@/lib/context/BLEContext";
 import React from "react";
 import {
+  ActivityIndicator,
+  FlatList,
   Modal,
-  View,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  StyleSheet,
+  View,
 } from "react-native";
-import { useBLE } from "@/lib/context/BLEContext";
 import { Device } from "react-native-ble-plx";
-import { router } from "expo-router";
 
 type BLEDeviceSelectorProps = {
   visible: boolean;

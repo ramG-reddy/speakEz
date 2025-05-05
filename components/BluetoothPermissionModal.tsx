@@ -1,12 +1,11 @@
 import React from "react";
 import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   Image,
-  Platform,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type BluetoothPermissionModalProps = {

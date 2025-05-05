@@ -72,7 +72,7 @@ export default function SentenceBuilder() {
   }, [sentence]);
 
   useEffect(() => {
-    if(sentence === "") return;
+    if (sentence.trim().length < 1) return;
     const fetchSuggestions = async () => {
       const newWordSuggestions = await getSuggestions({
         sentence,
@@ -125,18 +125,15 @@ export default function SentenceBuilder() {
   };
 
   const handleSentence = (actionType: NavAction) => {
-    if(actionType === "none") return; // Ignore if no action
-    
+    if (actionType === "none") return; // Ignore if no action
+
     // Handle button navigation when buttons are highlighted
     if (isBottomButtonHighlighted) {
       if (actionType === "up") {
         // Move back to the word grid
         setIsBottomButtonHighlighted(false);
         return;
-      } else if (
-        actionType === "left" ||
-        actionType === "right"
-      ) {
+      } else if (actionType === "left" || actionType === "right") {
         // Toggle between bottom navigation buttons
         setBottomHighlightedButton(bottomHighlightedButton === 0 ? 1 : 0);
         return;
@@ -154,10 +151,7 @@ export default function SentenceBuilder() {
         // Move back to the word grid
         setIsTopButtonHighlighted(false);
         return;
-      } else if (
-        actionType === "left" ||
-        actionType === "right"
-      ) {
+      } else if (actionType === "left" || actionType === "right") {
         // Toggle between top buttons
         setHighlightedButton(highlightedButton === 0 ? 1 : 0);
         return;
@@ -197,7 +191,7 @@ export default function SentenceBuilder() {
     if (nextWord >= 0 && nextWord < wordArray.length) {
       setSelectedWord(nextWord);
     }
-  }
+  };
 
   // Handle tap event (manual input)
   const handleTap = () => {
@@ -211,7 +205,8 @@ export default function SentenceBuilder() {
       // console.error("Sentence Builder: Not connected, ignoring last action.");
       return;
     }
-    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handleSentence(lastAction);
+    if (currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX)
+      handleSentence(lastAction);
     else {
       handleSentence(currHighlithedNav);
     }
@@ -245,21 +240,13 @@ export default function SentenceBuilder() {
       onPress={() => handleTap()}
       className="flex-1 p-2 md:p-4 bg-[#72919E]"
     >
-      <Text
-        className={`text-6xl font-semibold px-2 mb-2 md:mb-4`}
-      >
+      <Text className={`text-6xl font-semibold px-2 mb-2 md:mb-4`}>
         Sentence Builder
       </Text>
 
       <View style={styles.textArea} className="m-1 p-1">
         <View style={styles.inputContainer}>
-          <Text
-            style={[
-              styles.displayText,
-            ]}
-          >
-            {sentence}
-          </Text>
+          <Text style={[styles.displayText]}>{sentence}</Text>
         </View>
         <View className="flex flex-row items-center p-1 gap-1">
           <View>

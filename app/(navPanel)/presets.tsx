@@ -39,7 +39,6 @@ export default function Presets() {
 
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
-  const isTablet = width >= 768 && width < 1024;
 
   const pathname = usePathname();
   const isPresetPage = pathname === "/presets";

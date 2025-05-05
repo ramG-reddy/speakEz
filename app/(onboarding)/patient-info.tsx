@@ -1,16 +1,16 @@
+import { PatientInfo, useOnboarding } from "@/lib/context/OnboardingContext";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useOnboarding, PatientInfo } from "@/lib/context/OnboardingContext";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PatientInfoScreen() {

@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import { View, ActivityIndicator, Text } from "react-native";
 
 export default function OnboardingLayout() {
-  const { isOnboardingComplete, loading, checkOnboardingStatus } =
+  const { loading, checkOnboardingStatus } =
     useOnboarding();
 
   useEffect(() => {
