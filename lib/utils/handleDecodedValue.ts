@@ -38,10 +38,12 @@ const handleTouchSensorData = (data: string): NavAction => {
 
 const handleGyroSensorData = (data: string): NavAction => {
   // TODO: Handle gyro sensor data here
+  if(data === "1") return "action";
   return "none";
 };
 
 const handleEMGSensorData = (data: string): NavAction => {
   // TODO: Handle EMG sensor data here
+  if(data === "1") return "action";
   return "none";
 };

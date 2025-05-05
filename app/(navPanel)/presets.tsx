@@ -1,3 +1,4 @@
+import { TOUCH_SENSOR_IDENTIFIER_PREFIX } from "@/lib/Config";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
@@ -18,7 +19,7 @@ import {
 
 export default function Presets() {
   const { currHighlithedNav } = useAppContext();
-  const { isConnected, lastAction, setLastAction } = useBLE();
+  const { isConnected, lastAction, setLastAction, currDeviceType } = useBLE();
   const { phrases } = useOnboarding();
 
   const numCols = 3;
@@ -128,11 +129,14 @@ export default function Presets() {
   useEffect(() => {
     if (!isPresetPage) return;
     if (!isConnected) {
-      console.error("Presets Page: Not connected, ignoring last action.");
+      // console.error("Presets Page: Not connected, ignoring last action.");
       return;
     }
     console.log("Last Action (Presets):", lastAction);
-    handlePreset(lastAction);
+    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handlePreset(lastAction);
+    else {
+      handlePreset(currHighlithedNav);
+    }
   }, [lastAction]);
 
   const PresetItem = ({

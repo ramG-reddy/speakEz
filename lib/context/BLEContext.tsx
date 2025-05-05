@@ -18,6 +18,8 @@ export type PermissionStatus =
 type BLEContextType = {
   isConnected: boolean;
   lastAction: NavAction;
+  currDeviceType: string;
+  setCurrDeviceType: (deviceType: string) => void;
   setLastAction: (action: NavAction) => void;
   startScan: () => void;
   stopScan: () => void;
@@ -33,6 +35,8 @@ type BLEContextType = {
 const BLEContext = createContext<BLEContextType>({
   isConnected: false,
   lastAction: "none",
+  currDeviceType: "none",
+  setCurrDeviceType: () => {},
   setLastAction: () => {},
   startScan: () => {},
   stopScan: () => {},
@@ -100,6 +104,7 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
     useState<PermissionStatus>("unknown");
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionBlocked, setPermissionBlocked] = useState(false);
+  const [currDeviceType, setCurrDeviceType] = useState("none");
 
   // Get notification function
   const { showNotification } = useNotification();
@@ -325,6 +330,8 @@ export function BLEProvider({ children }: { children: React.ReactNode }) {
   const contextValue: BLEContextType = {
     isConnected,
     lastAction,
+    currDeviceType,
+    setCurrDeviceType,
     setLastAction,
     startScan,
     stopScan,

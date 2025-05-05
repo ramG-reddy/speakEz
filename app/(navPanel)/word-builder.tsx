@@ -18,10 +18,11 @@ import {
 import { usePathname } from "expo-router";
 import { NavAction } from "@/lib/types";
 import { getSuggestions } from "@/lib/utils/apiCalls";
+import { TOUCH_SENSOR_IDENTIFIER_PREFIX } from "@/lib/Config";
 
 export default function WordBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } = useAppContext();
-  const { isConnected, lastAction, setLastAction } = useBLE();
+  const { isConnected, lastAction, setLastAction, currDeviceType } = useBLE();
   const numCols = 12;
   const [suggestionsArray, setSuggestionsArray] = useState(MOCK_WORDS);
 
@@ -198,10 +199,13 @@ export default function WordBuilder() {
   useEffect(() => {
     if(!isWordBuilderPage) return;
     if(!isConnected){
-      console.error("Word Builder Page: Not connected, ignoring last action.");
+      // console.error("Word Builder Page: Not connected, ignoring last action.");
       return;
     }
-    handleWord(lastAction);
+    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handleWord(lastAction);
+    else {
+      handleWord(currHighlithedNav);
+    }
   }, [lastAction]);
 
   return (

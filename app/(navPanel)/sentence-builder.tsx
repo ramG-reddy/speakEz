@@ -1,3 +1,4 @@
+import { TOUCH_SENSOR_IDENTIFIER_PREFIX } from "@/lib/Config";
 import { MOCK_DATA } from "@/lib/constants/Data";
 import { useAppContext } from "@/lib/context/AppContext";
 import { useBLE } from "@/lib/context/BLEContext";
@@ -22,7 +23,7 @@ import {
 export default function SentenceBuilder() {
   const { currHighlithedNav, textAreaValue, setTextAreaValue } =
     useAppContext();
-  const { isConnected, lastAction, setLastAction } = useBLE();
+  const { isConnected, lastAction, setLastAction, currDeviceType } = useBLE();
   const { phrases, setPhrases } = useOnboarding();
 
   const numCols = 3;
@@ -207,10 +208,13 @@ export default function SentenceBuilder() {
     if (!isSentencePage) return;
     console.log("Last Action (Sentence):", lastAction);
     if (!isConnected) {
-      console.error("Sentence Builder: Not connected, ignoring last action.");
+      // console.error("Sentence Builder: Not connected, ignoring last action.");
       return;
     }
-    handleSentence(lastAction);
+    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handleSentence(lastAction);
+    else {
+      handleSentence(currHighlithedNav);
+    }
   }, [lastAction]);
 
   const WordItem = ({
