@@ -246,9 +246,7 @@ export default function SentenceBuilder() {
       className="flex-1 p-2 md:p-4 bg-[#72919E]"
     >
       <Text
-        className={`${
-          isSmallDevice ? "text-2xl" : "text-4xl"
-        } font-semibold px-2 mb-2 md:mb-4`}
+        className={`text-6xl font-semibold px-2 mb-2 md:mb-4`}
       >
         Sentence Builder
       </Text>
@@ -258,7 +256,6 @@ export default function SentenceBuilder() {
           <Text
             style={[
               styles.displayText,
-              isSmallDevice && styles.smallDeviceText,
             ]}
           >
             {sentence}
@@ -332,7 +329,7 @@ export default function SentenceBuilder() {
               styles.selectedButton,
           ]}
         >
-          <Text className="text-center text-lg">Back</Text>
+          <Text style={styles.navigationButtonText}>Back</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push("./word-builder")}
@@ -344,7 +341,7 @@ export default function SentenceBuilder() {
               styles.selectedButton,
           ]}
         >
-          <Text className="text-center text-lg">Word Builder</Text>
+          <Text style={styles.navigationButtonText}>Word Builder</Text>
         </Pressable>
       </View>
     </Pressable>
@@ -375,7 +372,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   displayText: {
-    fontSize: 16,
+    fontSize: 28,
     color: "#000",
   },
   smallDeviceText: {
@@ -391,7 +388,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 12,
+    padding: 20,
     margin: 4,
   },
   selectedWord: {
@@ -399,17 +396,22 @@ const styles = StyleSheet.create({
   },
   wordText: {
     color: "#000",
-    fontSize: 16,
+    fontSize: 28,
     textAlign: "center",
   },
   wordGrid: {
     gap: 12,
   },
+
+  navigationButton: {
+    paddingHorizontal: 12,
+    borderRadius: 64,
+  },
+  navigationButtonText: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
   selectedButton: {
     backgroundColor: "#ADFF5B",
-  },
-  navigationButton: {
-    paddingHorizontal: 16,
-    borderRadius: 64,
   },
 });

@@ -68,10 +68,10 @@ export default function NavBar() {
         </TouchableWithoutFeedback>
       )}
 
-      <View className="h-16 bg-gray-800 flex flex-row justify-between items-center px-4">
+      <View className="h-28 bg-gray-800 flex flex-row justify-between items-center px-4">
         <Link href="/" asChild>
           <TouchableOpacity>
-            <Text className="text-white text-3xl">SpeakEz</Text>
+            <Text className="text-white text-5xl">SpeakEz</Text>
           </TouchableOpacity>
         </Link>
 
@@ -136,7 +136,7 @@ export default function NavBar() {
             </TouchableOpacity>
           )}
 
-          <Link href="/api-test" asChild>
+          {/* <Link href="/api-test" asChild>
             <TouchableOpacity>
               <Text className="text-blue-400">🌐</Text>
             </TouchableOpacity>
@@ -152,7 +152,7 @@ export default function NavBar() {
             <TouchableOpacity>
               <Text className="text-blue-400">⚙️</Text>
             </TouchableOpacity>
-          </Link>
+          </Link> */}
         </View>
 
         {/* Device selector modal */}

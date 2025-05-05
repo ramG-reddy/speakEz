@@ -133,7 +133,8 @@ export default function Presets() {
       return;
     }
     console.log("Last Action (Presets):", lastAction);
-    if(currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX) handlePreset(lastAction);
+    if (currDeviceType === TOUCH_SENSOR_IDENTIFIER_PREFIX)
+      handlePreset(lastAction);
     else {
       handlePreset(currHighlithedNav);
     }
@@ -169,11 +170,7 @@ export default function Presets() {
       onPress={() => handleTap()}
       className="flex-1 p-2 md:p-4 bg-[#72919E]"
     >
-      <Text
-        className={`${
-          isSmallDevice ? "text-2xl" : "text-4xl"
-        } font-semibold px-2 mb-2 md:mb-4`}
-      >
+      <Text className={`text-6xl font-semibold px-2 mb-2 md:mb-4`}>
         Presets
       </Text>
       <FlatList
@@ -200,7 +197,7 @@ export default function Presets() {
           ]}
           className="rounded-[64px] px-3"
         >
-          <Text className="text-center text-lg">Settings</Text>
+          <Text style={styles.navigationButtonText}>Settings</Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -215,7 +212,7 @@ export default function Presets() {
           ]}
           className="rounded-[64px] px-3"
         >
-          <Text className="text-center text-lg">Sentence Builder</Text>
+          <Text style={styles.navigationButtonText}>Sentence Builder</Text>
         </Pressable>
       </View>
     </Pressable>
@@ -227,7 +224,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 12,
+    padding: 20,
     margin: 4,
   },
   selectedPreset: {
@@ -235,7 +232,7 @@ const styles = StyleSheet.create({
   },
   presetText: {
     color: "#000",
-    fontSize: 16,
+    fontSize: 28,
     textAlign: "center",
   },
   smallPresetText: {
@@ -245,8 +242,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   navigationButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     borderRadius: 64,
+  },
+  navigationButtonText: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
   selectedButton: {
     backgroundColor: "#ADFF5B",

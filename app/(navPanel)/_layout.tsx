@@ -31,11 +31,18 @@ export default function NavPanelLayout() {
           </Text>
         </View>
         <NavPatch />
-        <Pressable onPress={() => router.push("../(home)/landing-page")}>
-          <View className="justify-center items-center bg-blue-500 rounded-lg shadow-md">
-            <Text className="text-white text-lg px-4 py-2">Home</Text>
-          </View>
-        </Pressable>
+        <View className="flex flex-row gap-3 items-center justify-center">
+          <Pressable onPress={() => router.push("/(home)/landing-page")}>
+            <View className="justify-center items-center bg-blue-500 rounded-lg shadow-md">
+              <Text className="text-white text-2xl px-4 py-2">Home</Text>
+            </View>
+          </Pressable>
+          <Pressable onPress={() => router.push("/(home)/settings")}>
+            <View className="justify-center items-center bg-blue-500 rounded-lg shadow-md">
+              <Text className="text-white text-2xl px-4 py-2">Settings</Text>
+            </View>
+          </Pressable>
+        </View>
       </View>
     );
   }

@@ -49,7 +49,7 @@ export default function WordBuilder() {
   const keyboard = [..."abcdefghijklmnopqrstuvwxyz0123456789".split("")];
 
   useEffect(() => {
-    if(halfWord.length < 1) return; // Ignore if halfWord is empty
+    if(halfWord.trim().length < 1) return; // Ignore if halfWord is empty
     if(!isWordBuilderPage) return; // Ignore if not on the word builder page
     const fetchSuggestions = async () => {
       const newSentence = textAreaValue.trim() + " " + halfWord.trim();
@@ -65,7 +65,7 @@ export default function WordBuilder() {
   }, [halfWord]);
 
   const handleKeyPress = (key: string) => {
-    setHalfWord((prev) => prev + key);
+    setHalfWord((prev) => prev.trim() + key);
   };
 
   const addToSentence = (data: string) => {
@@ -210,24 +210,13 @@ export default function WordBuilder() {
 
   return (
     <Pressable onPress={handleTap} className="flex-1 p-2 md:p-4 bg-[#72919E]">
-      <Text
-        className={`${
-          isSmallDevice ? "text-2xl" : "text-4xl"
-        } font-semibold px-2 mb-2 md:mb-4`}
-      >
+      <Text className={`text-6xl font-semibold px-2 mb-2 md:mb-4`}>
         Word Builder
       </Text>
       <View className="flex-1 flex-col">
         <View style={styles.textArea} className="m-1 p-1 flex-row">
           <View style={styles.inputContainer}>
-            <Text
-              style={[
-                styles.displayText,
-                isSmallDevice && styles.smallDeviceText,
-              ]}
-            >
-              {halfWord}
-            </Text>
+            <Text style={[styles.displayText]}>{halfWord}</Text>
           </View>
           <View className="flex flex-row items-center p-1 gap-1">
             <View>
@@ -326,7 +315,7 @@ export default function WordBuilder() {
               styles.selectedButton,
           ]}
         >
-          <Text className="text-center text-lg">Space</Text>
+          <Text style={styles.navigationButtonText}>Space</Text>
         </Pressable>
         <Pressable
           onPress={() => setHalfWord((prev) => prev.slice(0, -1))}
@@ -337,7 +326,7 @@ export default function WordBuilder() {
               styles.selectedButton,
           ]}
         >
-          <Text className="text-center text-lg">Backspace</Text>
+          <Text style={styles.navigationButtonText}>Backspace</Text>
         </Pressable>
       </View>
     </Pressable>
@@ -352,7 +341,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   displayText: {
-    fontSize: 16,
+    fontSize: 28,
     color: "#000",
   },
   smallDeviceText: {
@@ -375,12 +364,12 @@ const styles = StyleSheet.create({
   suggestion: {
     backgroundColor: "#FBFEFF",
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     marginHorizontal: 4,
   },
   suggestionText: {
-    fontSize: 16,
+    fontSize: 28,
     color: "#000",
   },
   keyboard: {
@@ -394,8 +383,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     borderRadius: 8,
-    padding: 4,
-    margin: 2,
+    padding: 10,
+    margin: 4,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -403,12 +392,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#ADFF5B",
   },
   keyText: {
-    fontSize: 16,
+    fontSize: 32,
     color: "#000",
   },
   bottomButton: {
     backgroundColor: "#89CDFF",
     paddingHorizontal: 16,
     borderRadius: 64,
+  },
+  navigationButton: {
+    paddingHorizontal: 12,
+    borderRadius: 64,
+  },
+  navigationButtonText: {
+    fontSize: 24,
+    fontWeight: "bold",
   },
 });
