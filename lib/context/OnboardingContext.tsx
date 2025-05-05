@@ -120,7 +120,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, "true");
       setIsOnboardingComplete(true);
-      router.replace("/(navPanel)/presets");
+      router.replace("/(home)/landing-page");
     } catch (error) {
       console.error("Error completing onboarding:", error);
     }

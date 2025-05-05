@@ -27,7 +27,6 @@ export default function BLEDeviceSelector({
   const handleDeviceSelect = (device: Device) => {
     connectToDevice(device);
     onClose();
-    router.push("../(navPanel)/presets");
   };
 
   // Render a device item with ESP-32 highlighting
