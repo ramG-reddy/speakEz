@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useNotification } from "@/lib/context/NotificationContext";
 import { useOnboarding } from "@/lib/context/OnboardingContext";
+import { useAppContext } from "@/lib/context/AppContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import {
@@ -8,15 +10,32 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Settings() {
-  const { patientInfo, phrases, checkOnboardingStatus } = useOnboarding();
+  const {
+    patientInfo,
+    phrases,
+    checkOnboardingStatus,
+    setPatientInfo,
+    setPhrases,
+  } = useOnboarding();
   const { showNotification } = useNotification();
+  const { changeDelay, setChangeDelay } = useAppContext();
   const insets = useSafeAreaInsets();
+
+  const [editablePatientInfo, setEditablePatientInfo] = useState({
+    name: patientInfo?.name || "",
+    age: patientInfo?.age || "",
+    region: patientInfo?.region || "",
+  });
+  const [editedPhrases, setEditedPhrases] = useState([...phrases]);
+  const [newPhrase, setNewPhrase] = useState("");
+  const [localChangeDelay, setLocalChangeDelay] = useState(changeDelay);
 
   const resetOnboarding = async () => {
     if (Platform.OS === "web") {
@@ -69,57 +88,175 @@ export default function Settings() {
     );
   };
 
+  const handleSavePatientInfo = async () => {
+    try {
+      await setPatientInfo(editablePatientInfo);
+      showNotification("Patient information updated successfully", "success");
+    } catch (error) {
+      console.error("Failed to update patient information:", error);
+      showNotification("Failed to update patient information", "error");
+    }
+  };
+
+  const handleUpdatePhrase = (index: number, newPhrase: string) => {
+    const updatedPhrases = [...editedPhrases];
+    updatedPhrases[index] = newPhrase;
+    setEditedPhrases(updatedPhrases);
+  };
+
+  const handleRemovePhrase = (index: number) => {
+    const updatedPhrases = editedPhrases.filter((_, i) => i !== index);
+    setEditedPhrases(updatedPhrases);
+  };
+
+  const handleSavePhrases = async () => {
+    try {
+      await setPhrases(editedPhrases);
+      showNotification("Phrases updated successfully", "success");
+    } catch (error) {
+      console.error("Failed to update phrases:", error);
+      showNotification("Failed to update phrases", "error");
+    }
+  };
+
+  const handleAddPhrase = () => {
+    if (newPhrase.trim() === "") {
+      showNotification("Phrase cannot be empty", "error");
+      return;
+    }
+    setEditedPhrases([...editedPhrases, newPhrase.trim()]);
+    setNewPhrase("");
+  };
+
+  const handleSaveChangeDelay = async () => {
+    if (isNaN(localChangeDelay) || localChangeDelay <= 0) {
+      showNotification("Invalid delay value", "error");
+      return;
+    }
+    await setChangeDelay(localChangeDelay);
+    showNotification("Change delay updated successfully", "success");
+  };
+
   return (
     <ScrollView
       style={[
         styles.container,
         {
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
-          paddingLeft: insets.left + 10,
-          paddingRight: insets.right + 10,
+          paddingTop: insets.top + 10,
+          paddingBottom: insets.bottom + 10,
+          paddingLeft: insets.left + 20,
+          paddingRight: insets.right + 20,
         },
       ]}
     >
       <Text style={styles.title}>Settings</Text>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Patient Information</Text>
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Name:</Text>
-            <Text style={styles.infoValue}>
-              {patientInfo?.name || "Not set"}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Age:</Text>
-            <Text style={styles.infoValue}>
-              {patientInfo?.age || "Not set"}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Region:</Text>
-            <Text style={styles.infoValue}>
-              {patientInfo?.region || "Not set"}
-            </Text>
-          </View>
+        <Text style={styles.sectionTitle}>
+          Navigation Highlight Delay (in milli sec)
+        </Text>
+        <View>
+          <TextInput
+            style={styles.input}
+            value={String(localChangeDelay)}
+            onChangeText={(text) => setLocalChangeDelay(Number(text))}
+            placeholder="Enter delay in ms"
+            keyboardType="number-pad"
+          />
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSaveChangeDelay}
+          >
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Phrases ({phrases.length})</Text>
+        <Text style={styles.sectionTitle}>Patient Information</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Name:</Text>
+            <TextInput
+              style={styles.input}
+              value={editablePatientInfo.name}
+              onChangeText={(text) =>
+                setEditablePatientInfo({ ...editablePatientInfo, name: text })
+              }
+              placeholder="Enter name"
+            />
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Age:</Text>
+            <TextInput
+              style={styles.input}
+              value={editablePatientInfo.age}
+              onChangeText={(text) =>
+                setEditablePatientInfo({ ...editablePatientInfo, age: text })
+              }
+              placeholder="Enter age"
+              keyboardType="number-pad"
+            />
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Region:</Text>
+            <TextInput
+              style={styles.input}
+              value={editablePatientInfo.region}
+              onChangeText={(text) =>
+                setEditablePatientInfo({ ...editablePatientInfo, region: text })
+              }
+              placeholder="Enter region"
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSavePatientInfo}
+          >
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          Phrases ({editedPhrases.length})
+        </Text>
         <View style={styles.phrasesContainer}>
-          {phrases.length > 0 ? (
-            phrases.map((phrase) => (
-              <View style={styles.phraseItem}>
-                <Text style={styles.phraseText}>{phrase}</Text>
+          {editedPhrases.length > 0 ? (
+            editedPhrases.map((phrase, index) => (
+              <View key={index} style={styles.phraseItem}>
+                <TextInput
+                  style={styles.phraseText}
+                  value={phrase}
+                  onChangeText={(text) => handleUpdatePhrase(index, text)}
+                />
+                <TouchableOpacity
+                  onPress={() => handleRemovePhrase(index)}
+                  style={styles.removeButton}
+                >
+                  <Text style={styles.removeButtonText}>✕</Text>
+                </TouchableOpacity>
               </View>
             ))
           ) : (
             <Text style={styles.emptyText}>No phrases added</Text>
           )}
         </View>
+        <View style={styles.addPhraseContainer}>
+          <TextInput
+            style={styles.input}
+            value={newPhrase}
+            onChangeText={setNewPhrase}
+            placeholder="Enter new phrase"
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddPhrase}>
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSavePhrases}>
+          <Text style={styles.saveButtonText}>Save Phrases</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -176,8 +313,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
   },
   phraseText: {
+    flex: 1,
     fontSize: 16,
   },
   emptyText: {
@@ -199,5 +339,55 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  saveButton: {
+    backgroundColor: "#4287f5",
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  saveButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  removeButton: {
+    backgroundColor: "#f44336",
+    borderRadius: 8,
+    padding: 8,
+    marginLeft: 8,
+  },
+  removeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  addPhraseContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  addButton: {
+    backgroundColor: "#4287f5",
+    borderRadius: 8,
+    padding: 12,
+    marginLeft: 8,
+  },
+  addButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  changeDelayContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
   },
 });

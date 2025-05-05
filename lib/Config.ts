@@ -8,7 +8,11 @@ export const ORDER_OF_HIGHLIGHTS: NavAction[] = [
   "left",
 ];
 
-export const CHANGE_DELAY_ms: number = 1500;
+export let CHANGE_DELAY_ms: number = 1500;
+
+export const setChangeDelay = (newDelay: number) => {
+  CHANGE_DELAY_ms = newDelay;
+};
 
 // Bluetooth configuration
 export const ESP32_NAME = "ESP32-S3-Touch";
@@ -25,3 +29,4 @@ export const EMG_SENSOR_IDENTIFIER_PREFIX = "EMG";
 export const ONBOARDING_COMPLETE_KEY = "onboarding_complete";
 export const PATIENT_INFO_KEY = "patient_info";
 export const PHRASES_KEY = "patient_phrases";
+export const CHANGE_DELAY_KEY = "change_delay";

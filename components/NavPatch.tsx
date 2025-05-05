@@ -10,13 +10,13 @@ export default function NavigationControl() {
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
 
-  const { currHighlithedNav, setCurrHighlightedNav } = useAppContext();
+  const { currHighlithedNav, setCurrHighlightedNav, changeDelay } = useAppContext();
 
   // First effect: Update local state
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % dirs.length);
-    }, CHANGE_DELAY_ms);
+    }, changeDelay);
 
     return () => clearInterval(interval);
   }, [dirs.length]);
