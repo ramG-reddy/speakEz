@@ -111,6 +111,7 @@ export default function SentenceBuilder() {
       console.log("Sentence page:", sentence);
       speakText(sentence);
       setPhrases([...phrases, sentence]);
+      router.push("/presets");
     }
   };
 
