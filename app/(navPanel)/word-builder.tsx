@@ -197,7 +197,7 @@ export default function WordBuilder() {
   };
 
   useEffect(() => {
-    if(!isWordBuilderPage) return;
+    if(!isWordBuilderPage || lastAction === "none") return;
     if(!isConnected){
       // console.error("Word Builder Page: Not connected, ignoring last action.");
       return;

@@ -127,7 +127,7 @@ export default function Presets() {
 
   // Handle last action event (BLE input)
   useEffect(() => {
-    if (!isPresetPage) return;
+    if (!isPresetPage || lastAction === "none") return;
     if (!isConnected) {
       // console.error("Presets Page: Not connected, ignoring last action.");
       return;

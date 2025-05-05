@@ -205,7 +205,7 @@ export default function SentenceBuilder() {
   };
 
   useEffect(() => {
-    if (!isSentencePage) return;
+    if (!isSentencePage || lastAction === "none") return;
     console.log("Last Action (Sentence):", lastAction);
     if (!isConnected) {
       // console.error("Sentence Builder: Not connected, ignoring last action.");

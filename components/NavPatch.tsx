@@ -2,15 +2,24 @@ import { View, Text, Dimensions, Image, Pressable } from "react-native";
 import { useEffect, useState } from "react";
 import { ORDER_OF_HIGHLIGHTS, CHANGE_DELAY_ms } from "@/lib/Config";
 import { useAppContext } from "@/lib/context/AppContext";
+import { NavAction } from "@/lib/types";
 
 export default function NavigationControl() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const dirs = ORDER_OF_HIGHLIGHTS;
+  const MP = (act: NavAction) => {
+    if(act === "action") return 0;
+    if(act === "up") return 1;
+    if(act === "right") return 2;
+    if(act === "down") return 3;
+    if(act === "left") return 4;
+    return 0; // Default case
+  }
+  const { currHighlithedNav, setCurrHighlightedNav, changeDelay } = useAppContext();
+  const [currentIndex, setCurrentIndex] = useState(MP(currHighlithedNav));
   const { width } = Dimensions.get("window");
   const isSmallDevice = width < 768;
   const isTablet = width >= 768 && width < 1024;
 
-  const { currHighlithedNav, setCurrHighlightedNav, changeDelay } = useAppContext();
 
   // First effect: Update local state
   useEffect(() => {
@@ -19,12 +28,12 @@ export default function NavigationControl() {
     }, changeDelay);
 
     return () => clearInterval(interval);
-  }, [dirs.length]);
+  });
 
   // Second effect: Update context state based on local state changes
   useEffect(() => {
     setCurrHighlightedNav(dirs[currentIndex]);
-  }, [currentIndex, setCurrHighlightedNav, dirs]);
+  }, [currentIndex]);
 
   // Adjust sizes based on screen width
   const buttonSize = isTablet || isSmallDevice ? "w-12 h-12" : "w-16 h-16";
@@ -41,7 +50,6 @@ export default function NavigationControl() {
     <View className="w-auto p-2 md:p-4 border border-gray-300 rounded-lg bg-[#72919E] flex flex-col items-center justify-center">
       <View className="flex flex-row gap-2 m-2">
         <Pressable
-          onPress={() => setCurrHighlightedNav("up")}
           className={`${buttonClass} ${
             currHighlithedNav === "up" ? highlightedClass : "bg-white"
           }`}
@@ -54,7 +62,6 @@ export default function NavigationControl() {
       </View>
       <View className="flex flex-row gap-2">
         <Pressable
-          onPress={() => setCurrHighlightedNav("left")}
           className={`${buttonClass} ${
             currHighlithedNav === "left" ? highlightedClass : "bg-white"
           }`}
@@ -69,7 +76,6 @@ export default function NavigationControl() {
           />
         </Pressable>
         <Pressable
-          onPress={() => setCurrHighlightedNav("action")}
           className={`${buttonClass} ${
             currHighlithedNav === "action" ? highlightedClass : "bg-white"
           }`}
@@ -77,7 +83,6 @@ export default function NavigationControl() {
           <Text className={buttonTextClass}>OK</Text>
         </Pressable>
         <Pressable
-          onPress={() => setCurrHighlightedNav("right")}
           className={`${buttonClass} ${
             currHighlithedNav === "right" ? highlightedClass : "bg-white"
           }`}
@@ -94,7 +99,6 @@ export default function NavigationControl() {
       </View>
       <View className="flex flex-row gap-2 m-2">
         <Pressable
-          onPress={() => setCurrHighlightedNav("down")}
           className={`${buttonClass} ${
             currHighlithedNav === "down" ? highlightedClass : "bg-white"
           }`}
