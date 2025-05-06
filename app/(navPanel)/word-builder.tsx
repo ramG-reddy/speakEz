@@ -175,7 +175,7 @@ export default function WordBuilder() {
       setIsBottomButtonHighlighted(true);
     } else {
       const nextKey = handleInput({
-        currHighlithedNav,
+        currHighlithedNav: actionType,
         array: keyboard,
         index: selectedKey,
         numCols,

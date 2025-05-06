@@ -14,6 +14,8 @@ export const setChangeDelay = (newDelay: number) => {
   CHANGE_DELAY_ms = newDelay;
 };
 
+export const API_URL = "http:localhost:8000";
+
 // Bluetooth configuration
 export const ESP32_NAME = "ESP32-S3-Touch";
 export const SERVICE_UUID = "4fafc201-1d5a-459e-8fcc-c5c9c331914b";

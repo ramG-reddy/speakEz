@@ -5,7 +5,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 export default function LandingPage() {
   return (
     <View className="flex-1 justify-center items-center bg-white gap-4">
-      <Text className="text-7xl font-bold">Welcome to the App!</Text>
+      <Text className="text-7xl font-bold">Welcome to the Application!</Text>
       <View className="flex flex-row gap-4 items-center">
         <Link href="/settings" asChild>
           <TouchableOpacity>

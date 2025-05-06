@@ -1,18 +1,14 @@
-import axios from 'axios';
-import { LLMAPIRequest } from '@/lib/types';
+import { PHRASES_KEY } from "@/lib/Config";
+import { APIRequest } from "@/lib/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PHRASES_KEY } from '@/lib/Config';
+import axios from "axios";
 
-const GEMINI_API_KEY = "AIzaSyC4Gp0T5U6b5gKm_zQledyVw26eUzLvOnw";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
-
-export const getSuggestions = async ({sentence, numTokens, type}: LLMAPIRequest) => {
-  if(!GEMINI_API_KEY || !GEMINI_API_URL) {
-    throw new Error('GEMINI_API_KEY or GEMINI_API_URL is not defined');
-  }
-
-  if(sentence.length < 1) {
+export const getSuggestions = async ({
+  sentence,
+  numTokens,
+  type,
+}: APIRequest) => {
+  if (sentence.length < 1) {
     sentence = "Please";
   }
 
@@ -32,14 +28,16 @@ export const getSuggestions = async ({sentence, numTokens, type}: LLMAPIRequest)
   const storedPhrases = await AsyncStorage.getItem(PHRASES_KEY);
   const phrases = storedPhrases ? JSON.parse(storedPhrases) : [];
 
-  const phrasesString = phrases.map((phrase: { id: string, text: string }) => phrase.text).join("\n");
+  const phrasesString = phrases
+    .map((phrase: { id: string; text: string }) => phrase.text)
+    .join("\n");
 
   prompt += `\n\nHere are some phrases that the patient has already selected:\n${phrasesString}\n\n`;
 
   // TODO: Use the age and regionality data
 
   const response = await axios.post(
-    `${GEMINI_API_URL}${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyC4Gp0T5U6b5gKm_zQledyVw26eUzLvOnw`,
     {
       contents: [
         {
@@ -47,8 +45,8 @@ export const getSuggestions = async ({sentence, numTokens, type}: LLMAPIRequest)
           parts: [
             {
               text: `You are a helpful assistant. You are supposed to generate phrases that help disabled people communicate better. You will be given context when available, try to align yourself with the context and give the response in the specific format requested. Never respond with sentences!!! you only have to give words!!!`,
-            }
-          ]
+            },
+          ],
         },
         {
           role: "user",
@@ -71,16 +69,16 @@ export const getSuggestions = async ({sentence, numTokens, type}: LLMAPIRequest)
   const suggestions = data?.candidates[0]?.content?.parts[0]?.text || null;
 
   if (!suggestions) {
-    throw new Error('No suggestions found');
+    throw new Error("No suggestions found");
   }
 
   const formattedSuggestions = suggestions
-    .replace(/<<|>>/g, '')
-    .split('::')
+    .replace(/<<|>>/g, "")
+    .split("::")
     .map((word: string) => word.trim())
     .filter((word: string) => word.length > 0);
 
   console.log("Suggestions:", formattedSuggestions);
 
   return formattedSuggestions;
-}
+};
